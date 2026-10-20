@@ -1,0 +1,54 @@
+CDB availability for 71 runs (54749-54962), 25 domains
+R = run payload, D = default only (CDBInterface falls back to it), - = nothing
+ranges are consecutive runs of the run list (count in parentheses)
+
+CEMC_BadTowerMap: R 61, D 10, - 0, 62 distinct payload(s)
+  default only: 54805, 54851, 54857, 54864, 54894-54895 (2), 54905-54907 (2), 54917, 54943
+CEMC_calib_ADC_to_ETower: R 71, D 0, - 0, 1 distinct payload(s)
+    71 runs: 499ab28bf83233efc073b5314fc85963_emcal_calib_54263_54974_v1.root
+CEMC_hotTowers_fracBadChi2: R 57, D 14, - 0, 58 distinct payload(s)
+  default only: 54805, 54816, 54851, 54857, 54864, 54894-54895 (2), 54898, 54905-54908 (3), 54917, 54943, 54962
+CEMC_meanTime: R 57, D 14, - 0, 58 distinct payload(s)
+  default only: 54805, 54816, 54851, 54857, 54864, 54894-54895 (2), 54898, 54905-54908 (3), 54917, 54943, 54962
+Centrality: R 71, D 0, - 0, 70 distinct payload(s)
+CentralityScale: R 69, D 0, - 2, 70 distinct payload(s)
+  nothing:      54857, 54905
+CentralityVertexScale: R 69, D 0, - 2, 70 distinct payload(s)
+  nothing:      54857, 54905
+HCALIN_BadTowerMap: R 0, D 71, - 0, 1 distinct payload(s)
+  default only: 54749-54962 (71)
+    71 runs: default:6c13ddeed34daa2e9445b0fd9e054bf4_HCALIN_HotMap_default.root
+HCALIN_calib_ADC_to_ETower: R 71, D 0, - 0, 1 distinct payload(s)
+    71 runs: eb3e351c737572c9b3757b86aec7bc07_HCALIN_MC_calib_default.root
+HCALIN_hotTowers_fracBadChi2: R 57, D 14, - 0, 58 distinct payload(s)
+  default only: 54805, 54816, 54851, 54857, 54864, 54894-54895 (2), 54898, 54905-54908 (3), 54917, 54943, 54962
+HCALIN_meanTime: R 57, D 14, - 0, 58 distinct payload(s)
+  default only: 54805, 54816, 54851, 54857, 54864, 54894-54895 (2), 54898, 54905-54908 (3), 54917, 54943, 54962
+HCALOUT_BadTowerMap: R 0, D 71, - 0, 1 distinct payload(s)
+  default only: 54749-54962 (71)
+    71 runs: default:e832fdbec055fc0024786ab8d705012b_HCALOUT_HotMap_default.root
+HCALOUT_calib_ADC_to_ETower: R 71, D 0, - 0, 50 distinct payload(s)
+HCALOUT_hotTowers_fracBadChi2: R 57, D 14, - 0, 58 distinct payload(s)
+  default only: 54805, 54816, 54851, 54857, 54864, 54894-54895 (2), 54898, 54905-54908 (3), 54917, 54943, 54962
+HCALOUT_meanTime: R 57, D 14, - 0, 58 distinct payload(s)
+  default only: 54805, 54816, 54851, 54857, 54864, 54894-54895 (2), 54898, 54905-54908 (3), 54917, 54943, 54962
+MBD_QFIT: R 55, D 0, - 16, 56 distinct payload(s)
+  nothing:      54754-54798 (4), 54805, 54816, 54851, 54857, 54864, 54894-54895 (2), 54898, 54905, 54939-54943 (2), 54962
+MBD_SLEWCORR: R 71, D 0, - 0, 1 distinct payload(s)
+    71 runs: 2971f0cc46600f9c42b190ad9c0254c6_mbd_slewcorr_54100.root
+MBD_T0CORR: R 65, D 0, - 6, 66 distinct payload(s)
+  nothing:      54754-54798 (4), 54857, 54898
+MBD_TIMECORR: R 71, D 0, - 0, 1 distinct payload(s)
+    71 runs: 5aafe78001888c441d246d6a1cbcb6ed_mbd_timecorr-54268_55031.root
+MBD_TQ_T0: R 71, D 0, - 0, 1 distinct payload(s)
+    71 runs: 36e50b9d12ae9a5087b9a44052f0f991_mbd_tq_t0_54100.root
+MBD_TT_T0: R 71, D 0, - 0, 1 distinct payload(s)
+    71 runs: e29d10e1e23c7b51edde9ee6e964bda6_mbd_tt_t0_54100.root
+SEPD_BadTowerMap: R 43, D 0, - 28, 44 distinct payload(s)
+  nothing:      54754-54805 (7), 54816, 54851-54861 (7), 54864-54865 (2), 54870, 54894-54895 (2), 54898, 54905, 54929-54930 (2), 54932, 54939-54943 (2), 54962
+SEPD_EventPlaneCalib: R 43, D 0, - 28, 44 distinct payload(s)
+  nothing:      54754-54805 (7), 54816, 54851-54861 (7), 54864-54865 (2), 54870, 54894-54895 (2), 54898, 54905, 54929-54930 (2), 54932, 54939-54943 (2), 54962
+SEPD_NMIP_CALIB: R 71, D 0, - 0, 1 distinct payload(s)
+    71 runs: f23b23c2017de9768ac5d7e67367a6ee_SEPD_NMIP_CALIB_v4.root
+data_driven_zdc_calib: R 71, D 0, - 0, 1 distinct payload(s)
+    71 runs: c03e0363d21324c27646c4db5a943cb0_data_driven_zdc_calib_54128_54974.root
