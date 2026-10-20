@@ -1,0 +1,45 @@
+CDB availability for 134 runs (82388-82703), 25 domains
+R = run payload, D = default only (CDBInterface falls back to it), - = nothing
+ranges are consecutive runs of the run list (count in parentheses)
+
+CEMC_BadTowerMap: R 134, D 0, - 0, 134 distinct payload(s)
+CEMC_calib_ADC_to_ETower: R 134, D 0, - 0, 1 distinct payload(s)
+    134 runs: c51e909496331c0eb5eaaeb60cd5286d_CEMC_ADC_To_ETower_OO_initial_v1.root
+CEMC_hotTowers_fracBadChi2: R 134, D 0, - 0, 134 distinct payload(s)
+CEMC_meanTime: R 134, D 0, - 0, 134 distinct payload(s)
+Centrality: R 133, D 1, - 0, 134 distinct payload(s)
+  default only: 82522
+CentralityScale: R 133, D 1, - 0, 134 distinct payload(s)
+  default only: 82522
+CentralityVertexScale: R 133, D 1, - 0, 134 distinct payload(s)
+  default only: 82522
+HCALIN_BadTowerMap: R 134, D 0, - 0, 134 distinct payload(s)
+HCALIN_calib_ADC_to_ETower: R 134, D 0, - 0, 133 distinct payload(s)
+HCALIN_hotTowers_fracBadChi2: R 134, D 0, - 0, 134 distinct payload(s)
+HCALIN_meanTime: R 134, D 0, - 0, 134 distinct payload(s)
+HCALOUT_BadTowerMap: R 134, D 0, - 0, 134 distinct payload(s)
+HCALOUT_calib_ADC_to_ETower: R 134, D 0, - 0, 133 distinct payload(s)
+HCALOUT_hotTowers_fracBadChi2: R 134, D 0, - 0, 134 distinct payload(s)
+HCALOUT_meanTime: R 134, D 0, - 0, 134 distinct payload(s)
+MBD_QFIT: R 134, D 0, - 0, 134 distinct payload(s)
+MBD_SLEWCORR: R 134, D 0, - 0, 1 distinct payload(s)
+    134 runs: c90e488f2f8f225ad7795a33f0fa22c7_mbd_slewcorr_79153.root
+MBD_T0CORR: R 0, D 0, - 134, 1 distinct payload(s)
+  nothing:      82388-82703 (134)
+    134 runs: NONE
+MBD_TIMECORR: R 134, D 0, - 0, 1 distinct payload(s)
+    134 runs: abe2df56de561af3655488b5718be559_mbd_timecorr-78965_82908.root
+MBD_TQ_T0: R 134, D 0, - 0, 1 distinct payload(s)
+    134 runs: 53be5f1a835022652fa9533bb031db79_mbd_tq_t0-79153-01.root
+MBD_TT_T0: R 134, D 0, - 0, 1 distinct payload(s)
+    134 runs: 35030dc36dc24cd242f1a52132905e5e_mbd_tt_t0-79153-01.root
+SEPD_BadTowerMap: R 0, D 0, - 134, 1 distinct payload(s)
+  nothing:      82388-82703 (134)
+    134 runs: NONE
+SEPD_EventPlaneCalib: R 0, D 0, - 134, 1 distinct payload(s)
+  nothing:      82388-82703 (134)
+    134 runs: NONE
+SEPD_NMIP_CALIB: R 134, D 0, - 0, 1 distinct payload(s)
+    134 runs: 866db5abdca24d60cc47f8856c8e97f4_sEPD_CalibConstants_CDB_Run71504_v2.root
+data_driven_zdc_calib: R 134, D 0, - 0, 1 distinct payload(s)
+    134 runs: a45ebfcc7edad9cb44cf3ba0403447eb_data_driven_zdc_calib_v3.root
