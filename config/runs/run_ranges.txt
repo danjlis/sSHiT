@@ -1,0 +1,10 @@
+# Run groups for the dst check: GROUP FIRST LAST [MIN_EVENTS] [MIN_MINUTES]
+#   LAST "+"   = up to the newest run in the run DB (resolved every time the check runs)
+#   MIN_*      = optional per-range thresholds (default DST_MIN_EVENTS / DST_MIN_MINUTES)
+# A group may have several lines (disjoint ranges). Every run number in a range is looked up
+# in the run DB and kept if it is a good run (see the dst block in shirt.conf).
+run2pp     47289   53864
+run2auau   54263    54974
+run3auau    60300   79142
+run3pp      79143   82387
+run3oo      82388   +

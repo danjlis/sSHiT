@@ -1,0 +1,20 @@
+# Condor submit file for shirt. Run from the sSHiT directory:
+#   condor_submit condor/shirt.sub                                          # ARGS below
+#   condor_submit ARGS="run dst --test --group run3auau -v" condor/shirt.sub
+#   condor_submit ARGS="run cdb" condor/shirt.sub
+#   condor_submit ARGS="checks/dst/make_runlists.sh -v" condor/shirt.sub   # good-run lists for dst
+# Jobs of the same check wait for each other (lock in the state dir), so several can be queued at once.
+# stdout/stderr -> condor/logs/; the condor log is on local /tmp.
+ARGS            = run dst --test -v
+universe        = vanilla
+executable      = condor/shirt_job.sh
+arguments       = $(ARGS)
+initialdir      = $ENV(PWD)
+environment     = "HOME=$ENV(HOME) USER=$ENV(USER)"
+getenv          = False
+output          = condor/logs/shirt.$(Cluster).out
+error           = condor/logs/shirt.$(Cluster).err
+log             = /tmp/shirt_$ENV(USER).$(Cluster).log
+request_memory  = 4GB
+request_cpus    = 1
+queue

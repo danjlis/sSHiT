@@ -1,0 +1,17 @@
+# shirt.local.conf -- personal settings, read at the end of shirt.conf. Not in git.
+#   cp shirt.local.conf.example shirt.local.conf
+# Only set what differs for you; everything else comes from shirt.conf.
+
+# --test output (default: test_www/ and test_state/ in the checkout)
+#SHIRT_TEST_WWW=/sphenix/WWW/$USER/shirt_test
+#SHIRT_TEST_STATE=/sphenix/user/$USER/shirt/test_state
+
+# your own production site instead of the shared one (keep WWW and state together)
+#SHIRT_WWW_ROOT=/sphenix/WWW/$USER/shirt
+#SHIRT_STATE_ROOT=/sphenix/user/$USER/shirt/state
+
+# a different sPHENIX build
+#SHIRT_SPHENIX_SETUP="source /opt/sphenix/core/bin/sphenix_setup.sh -n ana.579"
+
+# chat notifications (keep webhook URLs out of git)
+#SHIRT_WEBHOOK_URL="https://..."

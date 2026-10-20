@@ -1,0 +1,3 @@
+RAW_SEB        DST_TRIGGERED_EVENT_seb%    -   hosts
+CALOFITTING    DST_CALOFITTING             -
+CALO           DST_JETCALO                 ana%

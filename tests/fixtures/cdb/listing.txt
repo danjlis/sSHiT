@@ -1,0 +1,6 @@
+global tag: ProdA_2024
+global tag: Frozen_v1
+global tag: Brand_New_Tag
+payload type: CEMC_calib
+payload type: HCALIN_calib
+payload type: ZDC_calib

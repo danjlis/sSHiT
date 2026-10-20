@@ -1,0 +1,11 @@
+# DST types the dst check expects for every good run: NAME DSTTYPE_LIKE [TAG_LIKE] [MIN_TYPES]
+#   NAME          column label on the pages
+#   DSTTYPE_LIKE  SQL LIKE pattern on the FileCatalog dsttype (% = anything, _ = one character)
+#   TAG_LIKE      LIKE pattern on the production tag ("-" or missing = any tag)
+#   MIN_TYPES     how many distinct dsttypes must match per run (default 1), or "hosts":
+#                 one dsttype ending in each DST_CALO_HOSTS name (e.g. ..._seb07), missing ones are named
+# config/dst/<group>.txt (same format), if it exists, replaces this list for that group.
+# FileCatalog dsttypes have no run-period suffix (run3: DST_CALOFITTING, DST_JETCALO, DST_TRIGGERED_EVENT_seb00 ...).
+TRIGGERED      DST_TRIGGERED_EVENT_seb%    -   hosts   # one per calo SEB (DST_CALO_HOSTS)
+CALOFITTING    DST_CALOFITTING             -   1
+JETCALO        DST_JETCALO                 -   1   # calibrated calo DST

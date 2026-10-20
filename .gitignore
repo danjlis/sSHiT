@@ -1,0 +1,22 @@
+# report output and state of --test runs
+test_www/
+test_state/
+# report pages copied back from RCF to look at locally
+/test/
+# condor job output
+condor/logs/*
+!condor/logs/.gitignore
+# personal settings (see shirt.local.conf.example)
+shirt.local.conf
+# schema dumps (regenerate with checks/dst/discover.sh)
+config/dst_schema.txt
+dst_schema.txt
+# made by tests/run.sh
+tests/out/
+.DS_Store
+# editor backups, autosaves and recovery files
+*~
+\#*\#
+.#*
+*.swp
+*.swo

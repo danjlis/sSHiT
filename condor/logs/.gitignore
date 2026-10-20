@@ -1,0 +1,3 @@
+# condor job output (condor/shirt.sub); only this file is kept in git
+*
+!.gitignore
