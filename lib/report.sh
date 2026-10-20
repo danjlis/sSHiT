@@ -54,6 +54,7 @@ header h1{margin:0;font-size:22px}nav a{margin-right:12px}.mut{color:var(--mut)}
 .summary{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:16px 0}
 h2{font-size:17px;margin:28px 0 8px}h3{font-size:15px;margin:18px 0 6px}
 .tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px}
+.pdf{display:block;width:100%;height:85vh;border:1px solid var(--line);border-radius:8px;background:#fff}.pdf.short{height:60vh}.pdf.det{height:70vh}h3{font-size:15px;margin:18px 0 6px}
 table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:5px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 td{font-family:ui-monospace,Menlo,Consolas,monospace;overflow-wrap:anywhere}th{cursor:pointer;user-select:none;white-space:nowrap;background:var(--card);position:sticky;top:0}
 tr:last-child td{border-bottom:0}.none{color:var(--mut);font-style:italic}

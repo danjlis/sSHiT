@@ -54,7 +54,7 @@ if [[ " $WANT " == *" cdb "* ]]; then
   cp -R "$FIX/cdb/." "$C/"
   sed "s#@FILES@#$C/files#g" "$FIX/cdb/scan.tsv" > "$C/scan.tsv"
   # file mtimes decide "recent": a/a_copy/empty/zdc are old, b/c/hcal are new
-  touch -t 202001010000 "$C/files/cemc_a.root" "$C/files/cemc_a_copy.root" "$C/files/empty.root" "$C/files/zdc.txt"
+  touch -t 202001010000 "$C/files/cemc_a.root" "$C/files/cemc_a_copy.root" "$C/files/empty.root" "$C/files/zdc.txt" "$C/files/hcal_default.txt"
   touch "$C/files/cemc_b.root" "$C/files/cemc_c.root" "$C/files/hcal.root"
   cat > "$OUT/cdb.conf" <<EOF
 . "$OUT/test.conf"
@@ -62,15 +62,41 @@ CDB_TAGS_FILE=$C/cfg/global_tags.txt
 CDB_PAYLOADS_FILE=$C/cfg/payloads.txt
 CDB_GOODRUN_LIST=$C/cfg/goodruns.txt
 CDB_COMPARE_PAIRS=("ProdA_2024:Frozen_v1")
+CDB_DETECTORS_FILE=$C/cfg/detectors.txt
 CDB_ROOT_CHECK=0
 EOF
   SHIRT_CDB_MOCK_DIR=$C shirt cdb1 run cdb --test -c "$OUT/cdb.conf"; rc=$?
   [ -n "$VERBOSE" ] && echo "    exit $rc: $(summary cdb)"
   expect "first run exits 2 (FAIL)"                      test $rc = 2
-  expect "summary counts"                                has "$OUT/www/cdb/index.html" '3 tags \(4 tags/run groups\) x 3 payload types x 10 runs, 5 payload files: 5 coverage gaps'
-  expect "run2pp HCALIN gap at 1004"                     result cdb coverage 'ProdA_2024:run2pp HCALIN_calib' FAIL
-  expect "run3auau HCALIN gap at 1007-1008"              has "$(latest cdb)/results.tsv" 'run3auau HCALIN_calib.FAIL.2 of 5 runs missing: 1007-1008'
-  expect "MDC2 absent at all runs"                       result cdb coverage 'MDC2 (CEMC|HCALIN|ZDC)_calib' FAIL
+  expect "summary counts"                                has "$OUT/www/cdb/index.html" '3 tags \(4 tags/run groups\) x 3 payload types x 10 runs, 7 payload files: 1 \(tag, payload type\) with default-only runs, 4 with runs that have nothing'
+  expect "run2pp HCALIN: nothing at 1004 (WARN)"         has "$(latest cdb)/results.tsv" 'run2pp HCALIN_calib.WARN.nothing \(no payload, no default\): 1 of 5 runs: 1004$'
+  expect "run3auau HCALIN: default only at 1007-1008"    has "$(latest cdb)/results.tsv" 'run3auau HCALIN_calib.WARN.default only: 2 of 5 runs: 1007-1008$'
+  expect "MDC2: nothing at all runs (WARN)"              result cdb coverage 'MDC2 (CEMC|HCALIN|ZDC)_calib' WARN
+  expect "coverage never FAILs"                          not_has "$(latest cdb)/results.tsv" '^coverage.*FAIL'
+  expect "listed X_default is folded into X"             not_has "$(latest cdb)/results.tsv" 'HCALIN_calib_default'
+  expect "status csv: types in list order, no _default"  sh -c "gzip -dc '$(latest cdb)/cdb_status_tag_ProdA_2024--run3auau.csv.gz' | head -1 | grep -qx 'run,CEMC_calib,HCALIN_calib,ZDC_calib'"
+  expect "status csv: 1007 own / default"                sh -c "gzip -dc '$(latest cdb)/cdb_status_tag_ProdA_2024--run3auau.csv.gz' | grep -qx '1007,R,D,R'"
+  expect "status csv: 1004 own / nothing"                sh -c "gzip -dc '$(latest cdb)/cdb_status_tag_ProdA_2024--run2pp.csv.gz' | grep -qx '1004,R,-'"
+  expect "detector limited to run3auau: not in run2pp"   sh -c "gzip -dc '$(latest cdb)/cdb_status_tag_ProdA_2024--run2pp.csv.gz' | head -1 | grep -qx 'run,CEMC_calib,HCALIN_calib'"
+  expect "  ... and the run2pp page says so"            has "$OUT/www/cdb/pages/tag_ProdA_2024--run2pp.html" 'Not watched in this run group: 1 payload types of Global'
+  expect "detectors csv: type -> detector"               sh -c "gzip -dc '$(latest cdb)/cdb_detectors_tag_ProdA_2024--run3auau.csv.gz' | tr '\\n' ' ' | grep -qx 'payload,detector CEMC_calib,EMCAL HCALIN_calib,HCALIN ZDC_calib,Global '"
+  expect "coverage table has the detector"               has "$OUT/www/cdb/pages/tag_ProdA_2024--run3auau.html" '<td>HCALIN</td><td>HCALIN_calib</td>'
+  expect "fileid csv: file numbers per type (0 = none)"  sh -c "gzip -dc '$(latest cdb)/cdb_fileid_tag_ProdA_2024--run2pp.csv.gz' | grep -qx '1004,[0-9]*,0'"
+  expect "files csv: the default file and its runs"      sh -c "gzip -dc '$(latest cdb)/cdb_files_tag_ProdA_2024--run3auau.csv.gz' | grep -q '^HCALIN_calib,[0-9]*,D,2,1007,1008,.*hcal_default.txt$'"
+  expect "fallback csv over the run groups"              sh -c "gzip -dc '$(latest cdb)/cdb_fallback_ProdA_2024.csv.gz' | grep -qx 'HCALIN_calib,5,0,1,5,2,0'" && sh -c "gzip -dc '$(latest cdb)/cdb_fallback_ProdA_2024.csv.gz' | grep -qx 'ZDC_calib,,,,5,0,0'"
+  expect "tag page: default / nothing table"             has "$OUT/www/cdb/pages/tag_ProdA_2024.html" '<td>HCALIN</td><td>HCALIN_calib</td><td>0 / 1</td><td>2 / 0</td>'
+  if command -v root >/dev/null 2>&1; then
+    expect "plots drawn per detector (ROOT found)"       test -s "$(latest cdb)/cdb_plots_tag_ProdA_2024--run3auau_HCALIN.pdf" -a -s "$(latest cdb)/cdb_plots_tag_ProdA_2024--run3auau_Global.pdf" -a -s "$(latest cdb)/cdb_fallback_ProdA_2024.pdf"
+    expect "  ... no Global plot for run2pp"             test ! -e "$(latest cdb)/cdb_plots_tag_ProdA_2024--run2pp_Global.pdf" -a -s "$(latest cdb)/cdb_plots_tag_ProdA_2024--run2pp_EMCAL.pdf"
+    expect "group page embeds one PDF per detector"      test "$(grep -c '<object class="pdf det" data="../reports/[^"]*/cdb_plots_tag_ProdA_2024--run3auau_' "$OUT/www/cdb/pages/tag_ProdA_2024--run3auau.html")" -eq 3
+    expect "tag page embeds the fallback PDF"            has "$OUT/www/cdb/pages/tag_ProdA_2024.html" 'cdb_fallback_ProdA_2024.pdf'
+    expect "no drawing errors"                           not_has "$(latest cdb)/results.tsv" '^plots'
+    expect "draw.sh redraws from a published report"     "$SHIRT_HOME/checks/cdb/draw.sh" -o "$OUT/redraw" "$(latest cdb)"
+    expect "  ... all plots"                             test "$(ls "$OUT/redraw"/*.pdf | wc -l)" -eq "$(ls "$(latest cdb)"/*.pdf | wc -l)"
+  else
+    echo "  (ROOT not found: plot drawing not tested)"
+    expect "page says the plots were not drawn"          has "$OUT/www/cdb/pages/tag_ProdA_2024--run3auau.html" 'Not drawn \(ROOT not available\)'
+  fi
   expect "missing payload file"                          has "$(latest cdb)/results.tsv" 'zdc_missing.txt.FAIL.file does not exist'
   expect "duplicate md5 found"                           result cdb sanity 'md5 [0-9a-f]+' INFO
   expect "3 recent files in the floating tag"            has "$OUT/www/cdb/index.html" '3 new files in ProdA_2024'

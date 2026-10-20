@@ -1,7 +1,7 @@
 # shirt: delete the lines you do NOT want watched ('#' comments out)
-ProdA_2024:run2pp     runs/run2pp.goodruns.txt     payloads/run2pp_payloads.txt
-ProdA_2024:run2auau   runs/run2auau.goodruns.txt   payloads/run2auau_payloads.txt
-ProdA_2024:run3auau   runs/run3auau.goodruns.txt   payloads/run2auau_payloads.txt
-ProdA_2024:run3pp     runs/run3pp.goodruns.txt     payloads/run2pp_payloads.txt
-ProdA_2024:run3oo     runs/run3oo.goodruns.txt     payloads/run2auau_payloads.txt
+ProdA_2024:run2pp     runs/run2pp.goodruns.txt     payloads/calo_payloads.txt
+ProdA_2024:run2auau   runs/run2auau.goodruns.txt   payloads/calo_payloads.txt
+ProdA_2024:run3auau   runs/run3auau.goodruns.txt   payloads/calo_payloads.txt
+ProdA_2024:run3pp     runs/run3pp.goodruns.txt     payloads/calo_payloads.txt
+ProdA_2024:run3oo     runs/run3oo.goodruns.txt     payloads/calo_payloads.txt
 MDC2                  runs/mdc2_goodruns.txt       payloads/mdc2_payloads.txt

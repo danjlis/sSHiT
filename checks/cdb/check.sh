@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # cdb check -- calorimeter calibrations in the conditions DB.
 #
-#  coverage  every good run has a valid payload for every watched (tag, payload type)
+#  coverage  every good run has its own payload for every watched (tag, payload type); a run without
+#            one falls back to <type>_default (as CDBInterface does) -> "default only" (WARN), and
+#            a run with neither -> "nothing" (WARN). <type>_default is scanned for every watched
+#            type; listed itself next to <type> it is folded into <type>'s row.
+#  plots     per tag / run group: status grid, status fractions and payload-file map (cdb_plots_*.pdf),
+#            drawn by checks/cdb/draw.sh from the CSVs this check writes (cdb_status_*.csv,
+#            cdb_fileid_*.csv, cdb_files_*.csv, cdb_fallback_*.csv); needs ROOT, CDB_PLOTS=0 = off
 #  sanity    every referenced payload file exists, is non-empty, opens in ROOT; duplicates flagged
 #  recent    payload files of the floating tag created in the last CDB_RECENT_DAYS days
 #            (global tags have no timestamps, so file mtimes are used)
@@ -64,6 +70,32 @@ tagsafe() { printf '%s' "$1" | sed 's/:/--/g' | tr -c 'A-Za-z0-9_.-' '_'; }
 # entries are "TAG" or "TAG:GROUP" (a run group of TAG); base = the CDB global tag
 base_of() { printf '%s' "${1%%:*}"; }
 
+# det_map <run group> : stdin payload types -> "type<TAB>detector<TAB>order<TAB>watched(1/0)"
+# from CDB_DETECTORS_FILE ("DETECTOR [@group,...] pattern..."; first match wins, else Other;
+# no file = everything in one "All"). watched=0: the detector is limited to other run groups.
+det_map() {
+  awk -F'\t' -v OFS='\t' -v grp="$1" -v df="${CDB_DETECTORS_FILE:-}" '
+    BEGIN {
+      nd = 0
+      if (df != "") while ((getline line < df) > 0) {
+        sub(/#.*/, "", line); gsub(/^[ \t]+|[ \t]+$/, "", line); if (line == "") continue
+        n = split(line, f, /[ \t]+/); nd++; name[nd] = f[1]; i = 2; gl[nd] = ""
+        if (f[2] ~ /^@/) { gl[nd] = substr(f[2], 2); i = 3 }
+        re[nd] = ""
+        for (; i <= n; i++) { r = f[i]; gsub(/\./, "[.]", r); gsub(/\*/, ".*", r); gsub(/\?/, ".", r); re[nd] = re[nd] (re[nd] == "" ? "" : "|") "^(" r ")$" }
+      }
+    }
+    {
+      x = $1; d = (nd ? "Other" : "All"); o = nd + 1; w = 1
+      for (k = 1; k <= nd; k++) if (x ~ re[k]) {
+        d = name[k]; o = k
+        if (gl[k] != "" && grp != "" && index("," gl[k] ",", "," grp ",") == 0) w = 0
+        break
+      }
+      print x, d, o, w
+    }'
+}
+
 
 # ------------------------------------------------------------------ inputs
 OPT_TAGS=; OPT_PAYLOADS=; OPT_RUNS=
@@ -122,8 +154,9 @@ tag_col() {
 # per-tag lists. runs: --runs > column 2 > CDB_GOODRUN_LIST; payloads: --payload > column 3 > CDB_PAYLOADS_FILE
 #   runs/<tag>.txt  tagruns.tsv (tag run)      tag_runlist.tsv (tag file nruns)  runs.txt (union)
 #   pl/<tag>.txt    tagpl.tsv (tag payload)    tag_pllist.tsv  (tag file npl)    payloads.txt (union)
-mkdir -p "$W/runs" "$W/pl"
-: > "$W/tagruns.tsv"; : > "$W/tag_runlist.tsv"; : > "$W/tagpl.tsv"; : > "$W/tag_pllist.tsv"
+#   scanpl/<tag>.txt  tagscan.tsv (tag payload): the watched types plus <type>_default of each
+mkdir -p "$W/runs" "$W/pl" "$W/scanpl"
+: > "$W/tagruns.tsv"; : > "$W/tag_runlist.tsv"; : > "$W/tagpl.tsv"; : > "$W/tag_pllist.tsv"; : > "$W/tagscan.tsv"; : > "$W/dropped.tsv"
 while read -r tag; do
   rl=$OPT_RUNS
   [ -z "$rl" ] && rl=$(tag_col "$tag" 2)
@@ -144,8 +177,21 @@ while read -r tag; do
   printf '%s\t%s\t%s\n' "$tag" "$rl" "$(wc -l < "$f" | tr -d ' ')" >> "$W/tag_runlist.tsv"
 
   f="$W/pl/$(tagsafe "$tag").txt"
-  if [ -n "$OPT_PAYLOADS" ]; then printf '%s\n' $OPT_PAYLOADS; else read_list "$pll" | awk '{ print $1 }'; fi | awk '!seen[$0]++' > "$f"
+  # X_default listed next to X is X's fallback, not a row of its own
+  if [ -n "$OPT_PAYLOADS" ]; then printf '%s\n' $OPT_PAYLOADS; else read_list "$pll" | awk '{ print $1 }'; fi | awk '!seen[$0]++' \
+    | awk '{ w[NR] = $1; have[$1] = 1 }
+      END { for (i = 1; i <= NR; i++) { x = w[i]; if (x ~ /_default$/ && (substr(x, 1, length(x) - 8) in have)) continue; print x } }' > "$f"
+  # detectors (det/<tag>.tsv: type detector order) and run-group limits (dropped types go to dropped.tsv)
+  grp=; case "$tag" in *:*) grp=${tag#*:} ;; esac
+  det_map "$grp" < "$f" > "$W/dm.tsv"
+  awk -F'\t' -v OFS='\t' -v t="$tag" '$4 == 0 { print t, $1, $2 }' "$W/dm.tsv" >> "$W/dropped.tsv"
+  awk -F'\t' '$4 == 1 { print $1 }' "$W/dm.tsv" > "$f"
+  mkdir -p "$W/det"
+  awk -F'\t' -v OFS='\t' '$4 == 1 { print $1, $2, $3 }' "$W/dm.tsv" > "$W/det/$(tagsafe "$tag").tsv"
   awk -v OFS='\t' -v t="$tag" '{ print t, $1 }' "$f" >> "$W/tagpl.tsv"
+  sf="$W/scanpl/$(tagsafe "$tag").txt"
+  awk '{ print } !/_default$/ { print $1 "_default" }' "$f" | awk '!seen[$0]++' > "$sf"
+  awk -v OFS='\t' -v t="$tag" '{ print t, $1 }' "$sf" >> "$W/tagscan.tsv"
   printf '%s\t%s\t%s\n' "$tag" "$pll" "$(wc -l < "$f" | tr -d ' ')" >> "$W/tag_pllist.tsv"
 done < "$W/tags.txt"
 if [ -z "$cfg_ok" ]; then
@@ -162,6 +208,7 @@ FLOAT=$CDB_FLOATING_TAG
 log "cdb: $NBASE tags ($NTAGS tag/run-group entries), $NPL payload types, $NRUNS runs, floating tag $FLOAT${SUBSET:+ (subset run)}"
 vlog "tags: $(tr '\n' ' ' < "$W/tags.txt")"
 while IFS="$TAB" read -r t pll n; do vlog "payload types for $t: $n from $pll"; done < "$W/tag_pllist.tsv"
+awk -F'\t' '{ n[$1 " (" $3 ")"]++ } END { for (k in n) print k, n[k] }' "$W/dropped.tsv" | while read -r l; do vlog "skipped, detector limited to other run groups: $l types"; done
 while IFS="$TAB" read -r t rl n; do vlog "runs for $t: $n from $rl"; done < "$W/tag_runlist.tsv"
 vlog "state: $SHIRT_STATE, recent window ${CDB_RECENT_DAYS}d, ROOT file check ${CDB_ROOT_CHECK:-1}"
 
@@ -183,7 +230,7 @@ else
   while read -r tag; do
     trf="$W/bq/$(tagsafe "$tag").runs"; tpf="$W/bq/$(tagsafe "$tag").pl"
     awk -F'\t' -v b="$tag" '$2 == b { print $1 }' "$W/entries.tsv" | while read -r e; do cat "$W/runs/$(tagsafe "$e").txt"; done | sort -n -u > "$trf"
-    awk -F'\t' -v b="$tag" '$2 == b { print $1 }' "$W/entries.tsv" | while read -r e; do cat "$W/pl/$(tagsafe "$e").txt"; done | awk '!seen[$0]++' > "$tpf"
+    awk -F'\t' -v b="$tag" '$2 == b { print $1 }' "$W/entries.tsv" | while read -r e; do cat "$W/scanpl/$(tagsafe "$e").txt"; done | awk '!seen[$0]++' > "$tpf"
     log "scanning tag $tag ($(wc -l < "$trf" | tr -d ' ') runs, $(wc -l < "$tpf" | tr -d ' ') payload types)"
     t0=$SECONDS; n0=$(wc -l < "$W/scan.raw")
     run_root "$MACROS/CdbScan.C(\"$tag\",\"$trf\",\"$tpf\",\"$W/scan.raw\")" >> "$W/root.log" 2>&1 \
@@ -219,11 +266,11 @@ awk -F'\t' '$4 != "TAG_NOT_FOUND" { n[$1]++; if ($4 != "-") ok[$1]++ }
   END { for (t in n) if (!(t in ok)) print t }' "$W/scan.raw" | while read -r t; do
   result tags "$t" FAIL "no valid payload of any watched type for any run: CDB query error (see root.log) or runs outside this tag"
 done
-# keep only watched tags/payloads; strip file:// from urls
+# keep only watched tags/payloads (and their defaults); strip file:// from urls
 awk -F'\t' -v OFS='\t' '
   FILENAME == ARGV[1] { tp[$1 FS $2] = 1; next }
   (($1 FS $3) in tp) && $4 != "TAG_NOT_FOUND" { sub(/^file:\/\//, "", $4); print }' \
-  "$W/tagpl.tsv" "$W/scan.raw" > "$W/scan.tsv"
+  "$W/tagscan.tsv" "$W/scan.raw" > "$W/scan.tsv"
 log "scan: $(wc -l < "$W/scan.tsv" | tr -d ' ') (tag, run, payload) rows"
 
 # ------------------------------------------------------------------ payload files: stat, md5, ROOT
@@ -295,36 +342,79 @@ awk -F'\t' -v OFS='\t' '$4 != "-" {
   END { for (u in n) print u, pls[u], npl[u], tgs[u], n[u], lo[u], hi[u] }' "$W/scan.tsv" | sort > "$W/uidx.tsv"
 
 # ------------------------------------------------------------------ coverage
-# per (tag, payload): covered runs / total, missing runs collapsed into ranges
-awk -F'\t' -v OFS='\t' '$4 == "-" { print $2, $1, $3 }' "$W/scan.tsv" | collapse "$W/runs.txt" 12 > "$W/gaps.tsv"
-# covered = runs that actually returned a payload (a run with no scan row counts as missing)
-awk -F'\t' -v OFS='\t' '
-  FILENAME == ARGV[1] { rng[$1 FS $2] = $6; next }
-  FILENAME == ARGV[2] { if ($4 != "-") ok[$1 FS $3]++; next }
-  FILENAME == ARGV[3] { ntr[$1] = $3; next }
-  FILENAME == ARGV[4] { tg[++n] = $1; pl[n] = $2; next }
-  END {
-    for (i = 1; i <= n; i++) {
-      k = tg[i] FS pl[i]; c = ok[k] + 0; nruns = ntr[tg[i]] + 0
-      st = (c >= nruns) ? "OK" : "FAIL"
-      miss = rng[k]; if (c == 0 && miss == "") miss = "all runs (no CDB answer)"
-      printf "%s\t%s\t%d/%d\t%.1f%%\t%s\t%s\n", tg[i], pl[i], c, nruns, nruns ? 100 * c / nruns : 0, st, miss
-    }
-  }' "$W/gaps.tsv" "$W/scan.tsv" "$W/tag_runlist.tsv" "$W/tagpl.tsv" > "$W/coverage.tsv"
-# tags that do not exist have no rows in the scan -> drop them from coverage (already FAILed above)
+# Every (tag, run, watched type) is R (own payload), D (only <type>_default) or - (nothing).
+# One pass writes, per tag, the CSVs the plots are drawn from (csv/, also published):
+#   cdb_status_<page>.csv  run x type: R / D / -
+#   cdb_fileid_<page>.csv  run x type: the file the run gets, numbered per type in run order (0 = nothing)
+#   cdb_files_<page>.csv   payload,id,source,nruns,first_run,last_run,url  (the numbered files)
+# and covcount.tsv (tag type nR nD nN) + the non-R cells on stdout (run tag type status) for the ranges.
 awk -F'\t' '$4 == "TAG_NOT_FOUND" { print $1 }' "$W/scan.raw" > "$W/badtags.txt"
-if [ -s "$W/badtags.txt" ]; then
-  awk -F'\t' 'FILENAME == ARGV[1] { b[$1] = 1; next } !($1 in b)' "$W/badtags.txt" "$W/coverage.tsv" > "$W/cov.tmp" && mv "$W/cov.tmp" "$W/coverage.tsv"
-fi
-awk -F'\t' '$5 == "FAIL" { split($3, c, "/"); printf "coverage\t%s %s\tFAIL\t%d of %d runs missing: %s\n", $1, $2, c[2] - c[1], c[2], $6 }' "$W/coverage.tsv" >> "$W/results.tsv"
-NGAPS=$(awk -F'\t' '$5 == "FAIL"' "$W/coverage.tsv" | wc -l | tr -d ' ')
-# absent = no payload at any checked run (often just not used in this run period);
-# partial = some runs covered, some not (the suspicious case)
-NABSENT=$(awk -F'\t' '$5 == "FAIL" && $3 ~ /^0\//' "$W/coverage.tsv" | wc -l | tr -d ' ')
-NPARTIAL=$((NGAPS - NABSENT))
-# show problems first: partial gaps, then absent, then OK
-sort -t"$TAB" -k5,5 -k4,4nr "$W/coverage.tsv" > "$W/cov.tmp" && mv "$W/cov.tmp" "$W/coverage.tsv"
-vlog "coverage: $NGAPS of $(wc -l < "$W/coverage.tsv" | tr -d ' ') (tag, payload) pairs have gaps"
+mkdir -p "$W/csv"
+while read -r t; do printf '%s\t%s\n' "$t" "tag_$(tagsafe "$t")"; done < "$W/tags.txt" > "$W/tagpage.tsv"
+awk -F'\t' -v OFS='\t' -v dir="$W/csv" -v cc="$W/covcount.tsv" '
+  FILENAME == ARGV[1] { bad[$1] = 1; next }
+  FILENAME == ARGV[2] { pg[$1] = $2; next }
+  FILENAME == ARGV[3] { u[$1 FS $2 FS $3] = $4; next }
+  FILENAME == ARGV[4] { nr[$1]++; R[$1, nr[$1]] = $2; next }
+  { if ($1 in bad) next; if (!($1 in np)) tl[++nt] = $1; np[$1]++; P[$1, np[$1]] = $2 }
+  END {
+    printf "" > cc
+    for (ti = 1; ti <= nt; ti++) {
+      t = tl[ti]
+      fs = dir "/cdb_status_" pg[t] ".csv"; fi = dir "/cdb_fileid_" pg[t] ".csv"; ff = dir "/cdb_files_" pg[t] ".csv"
+      h = "run"; for (j = 1; j <= np[t]; j++) h = h "," P[t, j]
+      print h > fs; print h > fi
+      split("", cnt); split("", id); split("", nid); split("", src); split("", fn); split("", f1); split("", f2); split("", ford)
+      for (i = 1; i <= nr[t]; i++) {
+        r = R[t, i]; ls = r; li = r
+        for (j = 1; j <= np[t]; j++) {
+          x = P[t, j]; k = t FS r FS x; kd = k "_default"
+          if ((k in u) && u[k] != "-") { st = "R"; url = u[k] }
+          else if ((kd in u) && u[kd] != "-") { st = "D"; url = u[kd] }
+          else { st = "-"; url = "" }
+          cnt[x, st]++
+          if (st == "-") { ls = ls ",-"; li = li ",0" }
+          else {
+            fk = x SUBSEP url
+            if (!(fk in id)) { id[fk] = ++nid[x]; src[fk] = st; f1[fk] = r; ford[x, nid[x]] = url }
+            fn[fk]++; f2[fk] = r
+            ls = ls "," st; li = li "," id[fk]
+          }
+          if (st != "R") print r, t, x, st
+        }
+        print ls > fs; print li > fi
+      }
+      print "payload,id,source,nruns,first_run,last_run,url" > ff
+      for (j = 1; j <= np[t]; j++) {
+        x = P[t, j]
+        print t, x, cnt[x, "R"] + 0, cnt[x, "D"] + 0, cnt[x, "-"] + 0 >> cc
+        for (m = 1; m <= nid[x]; m++) { fk = x SUBSEP ford[x, m]; print x "," m "," src[fk] "," fn[fk] "," f1[fk] "," f2[fk] "," ford[x, m] > ff }
+      }
+      close(fs); close(fi); close(ff)
+    }
+  }' "$W/badtags.txt" "$W/tagpage.tsv" "$W/scan.tsv" "$W/tagruns.tsv" "$W/tagpl.tsv" | collapse "$W/runs.txt" 12 > "$W/gaps.tsv"
+# cdb_detectors_<page>.csv: payload,detector in detector order (the plots are drawn per detector)
+while IFS="$TAB" read -r t pg; do
+  [ -f "$W/det/${pg#tag_}.tsv" ] || continue
+  grep -qx "$t" "$W/badtags.txt" && continue
+  { echo "payload,detector"; awk -F'\t' -v OFS=',' '{ print $3, NR, $1, $2 }' "$W/det/${pg#tag_}.tsv" | sort -t, -k1,1n -k2,2n | cut -d, -f3,4; } > "$W/csv/cdb_detectors_$pg.csv"
+done < "$W/tagpage.tsv"
+# gaps.tsv: tag type status count first last ranges
+# coverage.tsv: tag type own default nothing own% status default-runs nothing-runs
+awk -F'\t' -v OFS='\t' '
+  FILENAME == ARGV[1] { rng[$1 FS $2 FS $3] = $7; next }
+  {
+    n = $3 + $4 + $5; st = ($4 + $5 > 0) ? "WARN" : "OK"
+    print $1, $2, $3, $4, $5, sprintf("%.1f%%", n ? 100 * $3 / n : 0), st, rng[$1 FS $2 FS "D"], rng[$1 FS $2 FS "-"]
+  }' "$W/gaps.tsv" "$W/covcount.tsv" > "$W/coverage.tsv"
+awk -F'\t' '{ n = $3 + $4 + $5
+    if ($4 > 0) printf "coverage\t%s %s\tWARN\tdefault only: %d of %d runs: %s\n", $1, $2, $4, n, $8
+    if ($5 > 0) printf "coverage\t%s %s\tWARN\tnothing (no payload, no default): %d of %d runs: %s\n", $1, $2, $5, n, $9 }' "$W/coverage.tsv" >> "$W/results.tsv"
+NDEF=$(awk -F'\t' '$4 > 0' "$W/coverage.tsv" | wc -l | tr -d ' ')
+NNOTH=$(awk -F'\t' '$5 > 0' "$W/coverage.tsv" | wc -l | tr -d ' ')
+# problems first: most runs with nothing, then most default-only
+sort -t"$TAB" -k7,7r -k5,5nr -k4,4nr "$W/coverage.tsv" > "$W/cov.tmp" && mv "$W/cov.tmp" "$W/coverage.tsv"
+vlog "coverage: $NDEF (tag, payload) pairs with default-only runs, $NNOTH with runs that have nothing"
 
 # ------------------------------------------------------------------ sanity
 # bad files: missing, empty, unreadable
@@ -474,7 +564,7 @@ OVERALL=$(results_worst)
 NFILES=$(wc -l < "$W/urls.txt" | tr -d ' ')
 TAGLBL="$NBASE tags"
 [ "$NTAGS" != "$NBASE" ] && TAGLBL="$NBASE tags ($NTAGS tags/run groups)"
-SUMMARY="$TAGLBL x $NPL payload types x $NRUNS runs, $NFILES payload files: $NGAPS coverage gaps ($NPARTIAL partial, $NABSENT absent at all runs), $NBAD bad files, $NRECENT new files in $FLOAT (last ${CDB_RECENT_DAYS}d)"
+SUMMARY="$TAGLBL x $NPL payload types x $NRUNS runs, $NFILES payload files: $NDEF (tag, payload type) with default-only runs, $NNOTH with runs that have nothing, $NBAD bad files, $NRECENT new files in $FLOAT (last ${CDB_RECENT_DAYS}d)"
 NTAGERR=$(awk -F'\t' '$1 == "tags"' "$W/results.tsv" | wc -l | tr -d ' ')
 [ "$NTAGERR" -gt 0 ] && SUMMARY="$NTAGERR tag/payload-type problems ($(awk -F'\t' '$1 == "tags" { printf "%s%s", sep, $2; sep = ", " }' "$W/results.tsv")), $SUMMARY"
 # subset label: what was selected on the command line (long lists shortened)
@@ -492,6 +582,21 @@ sec_status() { awk -F'\t' -v s="$1" '$1 == s { print $3 }' "$W/results.tsv" | so
 sec_worst() { local x; x=$(sec_status "$1"); worst_status OK $x; }
 col_worst() { local x; x=$(cut -f"$1" "$2" 2>/dev/null | sort -u); worst_status OK $x; }   # col_worst <col> <tsv>
 
+# ---- plots: drawn by checks/cdb/draw.sh from the CSVs (ROOT only, no sPHENIX libraries)
+PLOT_WHY=
+if [ "${CDB_PLOTS:-1}" != 1 ]; then PLOT_WHY="CDB_PLOTS=0"
+elif ! command -v root >/dev/null 2>&1; then PLOT_WHY="ROOT not available"; fi
+mkdir -p "$W/plots"
+draw_plots() {  # draw_plots <csv...> -> $W/plots/*.pdf
+  [ -z "$PLOT_WHY" ] || return 0
+  "$SHIRT_HOME/checks/cdb/draw.sh" -o "$W/plots" "$@" >> "$W/root.log" 2>&1 \
+    || result plots draw.sh WARN "drawing failed for some plots (see root.log)"
+}
+if [ -z "$PLOT_WHY" ]; then
+  log "plots: drawing $(ls "$W/csv"/cdb_status_*.csv 2>/dev/null | wc -l | tr -d ' ') status plots"
+  draw_plots "$W/csv"/cdb_status_*.csv
+else vlog "plots: not drawn ($PLOT_WHY)"; fi
+
 # ---- one page per global tag (pages/<name>.html + pages/<name>.summary), one card each
 mkdir -p "$W/pages"
 : > "$W/cards.html"
@@ -505,7 +610,13 @@ while read -r tag; do
   tnr=$(awk -F'\t' -v t="$tag" '$1 == t { print $3 }' "$W/tag_runlist.tsv")
   tpl=$(awk -F'\t' -v t="$tag" '$1 == t { print $2 }' "$W/tag_pllist.tsv")
   P=$W/pt
-  awk -F'\t' -v t="$tag" '$1 == t' "$W/coverage.tsv" | cut -f2- > "$P.cov"                  # payload covered pct status missing
+  awk -F'\t' -v t="$tag" '$1 == t' "$W/coverage.tsv" | cut -f2- > "$P.cov"                  # payload own default nothing own% status default-runs nothing-runs
+  # the same with the detector in front, in detector order (problems first within a detector)
+  DT="$W/det/$(tagsafe "$tag").tsv"
+  awk -F'\t' -v OFS='\t' 'FILENAME == ARGV[1] { d[$1] = $2; o[$1] = $3; next } { print o[$1], NR, d[$1], $0 }' "$DT" "$P.cov" \
+    | sort -t"$TAB" -k1,1n -k2,2n | cut -f3- > "$P.covd"
+  ndrop=$(awk -F'\t' -v t="$tag" '$1 == t' "$W/dropped.tsv" | wc -l | tr -d ' ')
+  dropdet=$(awk -F'\t' -v t="$tag" '$1 == t && !s[$3]++ { printf "%s%s", c, $3; c = ", " }' "$W/dropped.tsv")
   awk -F'\t' -v t="$tag" 'index("," $4 ",", "," t ",")' "$W/badfiles.tsv" > "$P.bad"
   awk -F'\t' -v t="$tag" 'index("," $4 ",", "," t ",")' "$W/shared.tsv" > "$P.shared"
   awk -F'\t' -v OFS='\t' -v t="$tag" '$2 == t { print $1, $3, $4, $5, $6 }' "$W/recent_all.tsv" > "$P.recent"
@@ -515,7 +626,7 @@ while read -r tag; do
 
   # per-test status
   s_exist=OK; grep -qx "$tag" "$W/badtags.txt" && s_exist=FAIL
-  s_cov=$(col_worst 4 "$P.cov")
+  s_cov=$(col_worst 6 "$P.cov")
   s_files=$(worst_status "$(col_worst 1 "$P.bad")" "$(col_worst 1 "$P.shared")")
   s_diff=$(col_worst 1 "$P.diff")
   st=$(worst_status "$s_exist" "$s_cov" "$s_files" "$s_diff")
@@ -526,16 +637,20 @@ while read -r tag; do
 
   # numbers for the card
   npl=$(wc -l < "$P.cov" | tr -d ' ')
-  covab=$(awk -F'\t' '{ split($2, c, "/"); a += c[1]; b += c[2] } END { print a + 0, b + 0 }' "$P.cov")
+  # cells (run x type): own payload a of b; default-only cd; nothing cn
+  covab=$(awk -F'\t' '{ a += $2; b += $2 + $3 + $4 } END { print a + 0, b + 0 }' "$P.cov")
   covpct=$(echo "$covab" | awk '{ if ($2) printf "%.1f", 100 * $1 / $2; else print "-" }')
+  cd=$(awk -F'\t' '{ s += $3 } END { print s + 0 }' "$P.cov"); cn=$(awk -F'\t' '{ s += $4 } END { print s + 0 }' "$P.cov")
+  cdpct=$(echo "$cd ${covab#* }" | awk '{ if ($2) printf "%.1f", 100 * $1 / $2; else print "-" }')
+  cnpct=$(echo "$cn ${covab#* }" | awk '{ if ($2) printf "%.1f", 100 * $1 / $2; else print "-" }')
   nfiles=$(awk -F'\t' -v t="$tag" '$1 == t { print $3 }' "$W/tag_urls.tsv" | sort -u | wc -l | tr -d ' ')
   nrecent=$(wc -l < "$P.recent" | tr -d ' ')
   last=$(awk -F'\t' -v t="$tag" '$1 == t { print $2 }' "$W/tag_last.tsv")
   if [ -n "$last" ]; then lastd=$(fmt_epoch "$last"); lastage=$(( (NOW - last) / 86400 )); else lastd="never"; lastage=; fi
-  ngaps=$(awk -F'\t' '$4 == "FAIL"' "$P.cov" | wc -l | tr -d ' ')
+  ndefp=$(awk -F'\t' '$3 > 0' "$P.cov" | wc -l | tr -d ' '); nnothp=$(awk -F'\t' '$4 > 0' "$P.cov" | wc -l | tr -d ' ')
 
   # page
-  psum="$tag: coverage ${covpct}% over $npl payload types x $tnr runs, $nfiles files, last updated $lastd"
+  psum="$tag: own payload ${covpct}%, default only ${cdpct}%, nothing ${cnpct}% over $npl payload types x $tnr runs, $nfiles files, last updated $lastd"
   [ -n "$failed" ] && psum="$psum; FAILED:$failed"
   [ -n "$warned" ] && psum="$psum; WARN:$warned"
   printf '%s\n%s\n%s\n' "$st" "$psum" "$tag" > "$W/pages/$pn.summary"
@@ -547,8 +662,25 @@ while read -r tag; do
     h_p "Payload list: <code>$tpl</code>. Run list: <code>$trl</code> ($tnr runs, $(head -1 "$W/runs/$(tagsafe "$tag").txt") .. $(tail -1 "$W/runs/$(tagsafe "$tag").txt"))."
 
     h_section "Run coverage" "$s_cov"
-    h_p "$ngaps of $npl payload types have runs without a valid payload (partial gaps first; 0/N = type not present for any checked run)."
-    h_table "$P.cov" "Payload type|Runs covered|Coverage|Status|Missing runs" 4
+    h_p "Per run and payload type: <b>own</b> payload, <b>default only</b> (no run payload, so CDBInterface falls back to <code>&lt;type&gt;_default</code>) or <b>nothing</b> (neither). $ndefp of $npl payload types have default-only runs, $nnothp have runs with nothing."
+    [ "$ndrop" -gt 0 ] && h_p "Not watched in this run group: $ndrop payload types of $dropdet (limited to other run groups in <code>$(basename "${CDB_DETECTORS_FILE:-detectors.txt}")</code>)."
+    h_table "$P.covd" "Detector|Payload type|Own payload|Default only|Nothing|Own|Status|Default-only runs|Runs with nothing" 7
+
+    h_section "Plots"
+    if ls "$W/plots/cdb_plots_${pn}"*.pdf >/dev/null 2>&1; then
+      h_p "Per detector: page 1 status per run, page 2 fraction of runs per status, page 3 which payload file each run gets."
+      cut -f2 "$DT" | awk '!s[$0]++' | while read -r det; do
+        pdf="cdb_plots_${pn}_$det.pdf"; [ -s "$W/plots/$pdf" ] || pdf="cdb_plots_$pn.pdf"
+        [ -s "$W/plots/$pdf" ] || continue
+        dst=$(awk -F'\t' -v d="$det" 'FILENAME == ARGV[1] { if ($2 == d) in_d[$1] = 1; next } ($1 in in_d) { print $6 }' "$DT" "$P.cov" | sort -u | tr '\n' ' ')
+        printf '<h3>%s <span class="mut">(%s types)</span> %s <a class="mut" href="@ATTACH@/%s">pdf</a></h3>\n' "$det" "$(awk -F'\t' -v d="$det" '$2 == d' "$DT" | wc -l | tr -d ' ')" "$(h_badge "$(worst_status OK $dst)")" "$pdf"
+        printf '<object class="pdf det" data="@ATTACH@/%s" type="application/pdf"><p><a href="@ATTACH@/%s">%s</a></p></object>\n' "$pdf" "$pdf" "$pdf"
+        [ "$pdf" = "cdb_plots_$pn.pdf" ] && break
+      done
+    else
+      h_p "Not drawn${PLOT_WHY:+ ($PLOT_WHY)}. Draw them from this report's CSVs with <code>checks/cdb/draw.sh &lt;report dir&gt;</code>."
+    fi
+    h_p "Data: <a href=\"@ATTACH@/cdb_status_$pn.csv.gz\">cdb_status_$pn.csv.gz</a> (run x type: R own / D default / - nothing), <a href=\"@ATTACH@/cdb_fileid_$pn.csv.gz\">cdb_fileid_$pn.csv.gz</a> (run x type: file number), <a href=\"@ATTACH@/cdb_files_$pn.csv.gz\">cdb_files_$pn.csv.gz</a> (the numbered files), <a href=\"@ATTACH@/cdb_detectors_$pn.csv.gz\">cdb_detectors_$pn.csv.gz</a> (type -&gt; detector)."
 
     h_section "Payload files" "$s_files"
     h_p "Problem files (missing, empty, unreadable by ROOT):"
@@ -597,13 +729,16 @@ while read -r tag; do
       printf '<div class="row">all tests passed</div>\n'
     fi
     if [ "$s_exist" = FAIL ]; then printf '<div class="row">global tag not found in the CDB</div>\n'
-    else printf '<div class="row">%s%% coverage &middot; %s payload types &middot; %s files</div>\n' "$covpct" "$npl" "$nfiles"; fi
+    else printf '<div class="row">own payload %s%% &middot; default only %s%% &middot; nothing %s%%</div>\n<div class="row">%s payload types &middot; %s files</div>\n' "$covpct" "$cdpct" "$cnpct" "$npl" "$nfiles"; fi
     printf '<div class="row">checked %s: %s runs (%s), %s payload types (%s)</div>\n' "$SHIRT_STAMP" "$tnr" "$(basename "$trl")" "$npl" "$(basename -- "$tpl")"
     printf '</a>\n'
   } > "$SHIRT_STATE/cards/$pn.html"
-  # numbers for the global tag's run-group summary, "-" = empty (stamp st failed warned nrecent last cov_a cov_b npl nfiles nruns runlist summary)
-  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$SHIRT_STAMP" "$st" "$(f=$(echo $failed); echo "${f:--}")" "$(f=$(echo $warned); echo "${f:--}")" "$nrecent" \
-    "${last:-0}" "${covab% *}" "${covab#* }" "$npl" "$nfiles" "$tnr" "$(basename "$trl")" "$psum" > "$SHIRT_STATE/cards/$pn.tsv"
+  # numbers for the global tag's run-group summary, "-" = empty
+  # (stamp st failed warned nrecent last own_cells all_cells npl nfiles nruns runlist summary default_cells nothing_cells)
+  printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' "$SHIRT_STAMP" "$st" "$(f=$(echo $failed); echo "${f:--}")" "$(f=$(echo $warned); echo "${f:--}")" "$nrecent" \
+    "${last:-0}" "${covab% *}" "${covab#* }" "$npl" "$nfiles" "$tnr" "$(basename "$trl")" "$psum" "$cd" "$cn" > "$SHIRT_STATE/cards/$pn.tsv"
+  # per type for the global tag's fallback table: type nruns default nothing (list order)
+  awk -F'\t' -v OFS='\t' -v t="$tag" '$1 == t { print $2, $3 + $4 + $5, $4, $5 }' "$W/covcount.tsv" > "$SHIRT_STATE/cards/$pn.fallback.tsv"
   vlog "tag $tag: $st (coverage $covpct%, last updated $lastd${failed:+, failed:$failed}${warned:+, warn:$warned})"
 done < "$W/tag_order.txt"
 rm -f "$W"/pt.*
@@ -626,11 +761,38 @@ while read -r btag; do
   last=$(awk -F'\t' '$7 > m { m = $7 } END { print m + 0 }' "$G")
   if [ "$last" -gt 0 ]; then lastd=$(fmt_epoch "$last"); lastage=$(( (NOW - last) / 86400 )); else lastd="never"; lastage=; fi
   covpct=$(awk -F'\t' '{ a += $8; b += $9 } END { if (b) printf "%.1f", 100 * a / b; else print "-" }' "$G")
+  # fallback table over the groups (as results/cdb_check_*/cdb_missing_default): csv for the plot, tsv for the page
+  FB=$W/csv/cdb_fallback_$(tagsafe "$btag").csv
+  cut -f1 "$G" | while read -r g; do
+    f="$SHIRT_STATE/cards/tag_$(tagsafe "$btag:$g").fallback.tsv"; [ -s "$f" ] && awk -v OFS='\t' -v g="$g" '{ print g, $0 }' "$f"
+  done > "$W/fbin.tsv"
+  # types in detector order (detector of each type without run-group limits), mapping csv for the plot
+  cut -f2 "$W/fbin.tsv" | awk '!s[$0]++' | det_map "" | awk -F'\t' -v OFS='\t' '{ print $3, NR, $1, $2 }' | sort -t"$TAB" -k1,1n -k2,2n | cut -f3,4 > "$W/fbdet.tsv"
+  { echo "payload,detector"; tr '\t' ',' < "$W/fbdet.tsv"; } > "$W/csv/cdb_detectors_$(tagsafe "$btag").csv"
+  awk -F'\t' -v OFS='\t' -v csv="$FB" -v tsv="$W/fb.tsv" '
+    FILENAME == ARGV[1] { pl[++np] = $1; det[$1] = $2; next }
+    { if (!($1 in gs)) { gs[$1] = 1; gl[++ng] = $1 } n[$1, $2] = $3; d[$1, $2] = $4; m[$1, $2] = $5 }
+    END {
+      h = "domain"; for (i = 1; i <= ng; i++) h = h "," gl[i] "_nruns," gl[i] "_default," gl[i] "_missing"; print h > csv
+      printf "" > tsv
+      for (j = 1; j <= np; j++) {
+        c = pl[j]; r = det[pl[j]] "\t" pl[j]
+        for (i = 1; i <= ng; i++) {
+          k = gl[i] SUBSEP pl[j]
+          if (k in n) { c = c "," n[k] "," d[k] "," m[k]; r = r "\t" (d[k] + m[k] == 0 ? "ok" : d[k] " / " m[k]) }
+          else { c = c ",,,"; r = r "\t" "" }
+        }
+        print c > csv; print r > tsv
+      }
+    }' "$W/fbdet.tsv" "$W/fbin.tsv"
+  fbhdr="Detector|Payload type"; for g in $(cut -f1 "$G"); do fbhdr="$fbhdr|$g ($(awk -F'\t' -v g="$g" '$1 == g { print $12 }' "$G") runs)"; done
+  draw_plots "$FB"
+  fbpdf="cdb_fallback_$(tagsafe "$btag").pdf"
   upd=$(awk -F'\t' '$6 > 0 { printf "%s%s", s, $1; s = ", " }' "$G")
   ngrp=$(wc -l < "$G" | tr -d ' ')
   nbadg=$(awk -F'\t' '$3 == "FAIL" || $3 == "WARN"' "$G" | wc -l | tr -d ' ')
 
-  psum="$btag: $ngrp run groups, coverage ${covpct}%, last updated $lastd"
+  psum="$btag: $ngrp run groups, own payload ${covpct}%, last updated $lastd"
   [ "$nbadg" -gt 0 ] && psum="$psum; problems in $(awk -F'\t' '$3 == "FAIL" || $3 == "WARN" { printf "%s%s", s, $1; s = " " }' "$G")"
   printf '%s\n%s\n%s\n' "$st" "$psum" "$btag" > "$W/pages/$pn.summary"
   {
@@ -640,7 +802,14 @@ while read -r btag; do
     printf '<div class="cards">\n'
     awk -v b="$btag:" 'index($0, b) == 1' "$W/groups.txt" | while read -r e; do f="$SHIRT_STATE/cards/tag_$(tagsafe "$e").html"; [ -f "$f" ] && cat "$f"; done
     printf '</div>\n'
-    while IFS="$TAB" read -r g gstamp gst gfail gwarn gnrec glast ga gb gnpl gnf gnr grl gsum; do
+    h_section "Runs without their own payload, per run group"
+    h_p "Each cell: <b>default only / nothing</b> (out of the group's runs); <b>ok</b> = every run has its own payload; empty = not watched in that group. From each group's latest check."
+    h_table "$W/fb.tsv" "$fbhdr" 0
+    if [ -s "$W/plots/$fbpdf" ]; then
+      printf '<object class="pdf short" data="@ATTACH@/%s" type="application/pdf"><p><a href="@ATTACH@/%s">%s</a></p></object>\n' "$fbpdf" "$fbpdf" "$fbpdf"
+    fi
+    h_p "Data: <a href=\"@ATTACH@/$(basename "$FB").gz\">$(basename "$FB").gz</a>"
+    while IFS="$TAB" read -r g gstamp gst gfail gwarn gnrec glast ga gb gnpl gnf gnr grl gsum gcd gcn; do
       gpn="tag_$(tagsafe "$btag:$g")"
       [ "$gfail" = - ] && gfail=; [ "$gwarn" = - ] && gwarn=
       if [ "$gstamp" = - ]; then
@@ -668,13 +837,13 @@ while read -r btag; do
                     n = split($5, w, " "); for (i = 1; i <= n; i++) if (w[i] != "-") printf "<span class=\"chip w\">%s: %s</span>", $1, w[i] }' "$G"
     else printf 'all tests passed in all run groups'; fi
     printf '</div>\n'
-    printf '<div class="row">%s%% coverage over all run groups</div>\n' "$covpct"
+    printf '<div class="row">own payload %s%% over all run groups</div>\n' "$covpct"
     printf '<div class="row">groups: %s</div>\n' "$(cut -f1 "$G" | tr '\n' ' ')"
     printf '</a>\n'
   } > "$SHIRT_STATE/cards/$pn.html"
   vlog "tag $btag: $st over $ngrp run groups (coverage $covpct%, last updated $lastd)"
 done < "$W/grouped.txt"
-rm -f "$W/grp.tsv"
+rm -f "$W/grp.tsv" "$W/fb.tsv" "$W/fbin.tsv" "$W/fbdet.tsv"
 
 # gallery: latest card of every global tag -- floating tag, the watched list, then anything checked in this run
 # (a tag with run groups shows its summary card; the group cards are on its page)
@@ -720,6 +889,8 @@ done > "$W/cards.html"
 } >> "$B"
 
 gzip -c "$W/scan.tsv" > "$A/scan.tsv.gz"
+for f in "$W/csv"/*.csv; do [ -f "$f" ] && gzip -c "$f" > "$A/$(basename "$f").gz"; done
+for f in "$W/plots"/*.pdf; do [ -f "$f" ] && cp "$f" "$A/"; done
 cp "$W/files.tsv" "$A/files.tsv"
 [ -f "$W/root.log" ] && cp "$W/root.log" "$A/root.log"
 finish "$SUMMARY"

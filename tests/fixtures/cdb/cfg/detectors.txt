@@ -1,0 +1,4 @@
+# test detectors: ZDC is only watched in run group run3auau
+EMCAL    CEMC*
+HCALIN   HCALIN*
+Global   @run3auau   ZDC*

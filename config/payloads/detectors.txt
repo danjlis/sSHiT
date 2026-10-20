@@ -1,0 +1,14 @@
+# Payload types by detector, for the cdb check: one table section and one set of plots per detector.
+#   DETECTOR  [@group,group,...]  pattern ...
+# Patterns match the payload type name ('*' = anything, case sensitive); the first matching line wins,
+# and types that match no line go to "Other". DETECTOR is a single word (it is part of file names).
+# @groups: the detector's types are only watched in these run groups (the part after "TAG:" in
+# global_tags.txt); other run groups skip them entirely. Tags without run groups (MDC2) keep them.
+EMCAL     CEMC* EMC* cemc* emc*
+HCALIN    HCALIN* IHCAL* OLD_INNER_HCAL* ihcal*
+HCALOUT   HCALOUT* OHCAL* OLD_OUTER_HCAL* ohcal*
+MBD       MBD*
+sEPD      SEPD*
+Global    @run2auau,run3auau,run3oo   data_driven_zdc_calib *zdc* *ZDC* Centrality* CENTRALITY* EVENTPLANE*
+Jets      JES* JET_*
+Calo      CALO_* calo_geo cell_geom

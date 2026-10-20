@@ -91,6 +91,31 @@ MDC2                  runs/mdc2.txt       payloads/mdc2_calo.txt
 Single tag: `./shirt.sh run cdb --tag MDC2` (uses MDC2's own lists; `--runs FILE` / `--payload TYPE` override). A single-tag
 run only replaces that tag's card and page; the other cards stay from their last check.
 
+**Default fallback.** A run without its own payload of type `X` falls back to `X_default` (as `CDBInterface` does).
+For every watched type the check also looks up `X_default`, and each run is **own payload**, **default only** or
+**nothing**. Both "default only" and "nothing" are WARN. An `X_default` listed next to `X` is folded into `X`'s row.
+
+**Plots.** The check writes all the plot data as CSVs into the report, then `checks/cdb/draw.sh` draws them with
+ROOT (`checks/cdb/plots/CdbPlots.C`); the PDFs are embedded in the pages:
+
+| CSV (`reports/<stamp>/`, gzipped) | content | plot |
+|---|---|---|
+| `cdb_status_<page>.csv` | run x type: `R` own / `D` default / `-` nothing | status grid, status fractions |
+| `cdb_fileid_<page>.csv` | run x type: number of the file the run gets (0 = nothing) | which file each run gets |
+| `cdb_files_<page>.csv` | the numbered files: payload, id, R/D, runs, first, last, url | |
+| `cdb_fallback_<tag>.csv` | per type and run group: runs, default only, nothing | tag page table |
+| `cdb_detectors_<page or tag>.csv` | payload type -> detector, in detector order | the per-detector split |
+
+**Per detector.** `config/payloads/detectors.txt` maps payload types to detectors (`DETECTOR [@group,...] pattern...`,
+first match wins, unmatched types go to "Other"). The coverage tables get a detector column, each run-group page gets
+one embedded plot set per detector (`cdb_plots_<page>_<DETECTOR>.pdf`, from `cdb_detectors_<page>.csv`), and the
+tag page table and plot are grouped by detector. `@groups` limits a detector to those run groups: `Global`
+(ZDC, centrality, event plane) is only watched for run2auau, run3auau and run3oo; the pp groups skip it entirely.
+
+Redraw any report without rerunning the check: `checks/cdb/draw.sh [-o OUTDIR] <report dir or CSVs>`.
+`CDB_PLOTS=0` turns drawing off; without ROOT the pages say the plots were not drawn and the CSVs are still there.
+A new plot = a new function in `CdbPlots.C` that reads CSVs, and a line in `draw.sh`.
+
 The CDB check is read-only (`CDBUtils::PayloadIOVs`, `listGlobalTags`, `listPayloadTypes`).
 `CDB_FLOATING_TAG` (ProdA_2024) is the moving tag: its changes are reported; changes to any other tag FAIL.
 File dates come from payload-file mtimes, since global tags have no timestamps.

@@ -1,2 +1,4 @@
 CEMC_calib
 HCALIN_calib   # comment ok
+HCALIN_calib_default   # folded into HCALIN_calib (its fallback)
+ZDC_calib              # Global: watched in run3auau only
