@@ -78,7 +78,9 @@ EOF
   expect "run names csv for a tag with named runs"       sh -c "gzip -dc '$(latest cdb)/cdb_runnames_tag_ProdA_2024--run2pp.csv.gz' | grep -qx '1005,O+O, 0.5 mrad'"
   expect "  ... none for a tag without"                  test ! -e "$(latest cdb)/cdb_runnames_tag_ProdA_2024--run3auau.csv.gz"
   expect "tag page lists the run names"                  has "$OUT/www/cdb/pages/tag_ProdA_2024--run2pp.html" '<td>1004</td><td>p\+p 0 mrad xing, calo only</td>'
-  expect "group page: sections in order, collapsibles"   sh -c "grep -oE '<h2>[A-Z][a-z]+ [a-z]+|<details class=\"sec\"><summary>[A-Za-z]+ [a-z]+' '$OUT/www/cdb/pages/tag_ProdA_2024--run2pp.html' | sed 's/.*>//' | tr '\\n' '|' | grep -q '^Run names|Changes since|Changes in|Newest payload|Coverage plots|.*Coverage table|Payload files|'"
+  expect "recent changes by payload type"                has "$OUT/www/cdb/pages/tag_ProdA_2024--run3auau.html" '<td>CEMC_calib</td><td>2</td><td>5 of 5</td><td>1006-1010</td><td>[0-9-]{10}: 5 runs \(1006-1010\)</td>'
+  expect "  ... runs of one payload type"                has "$OUT/www/cdb/pages/tag_ProdA_2024--run3auau.html" '<td>HCALIN_calib</td><td>1</td><td>3 of 5</td><td>1006, 1009-1010</td>'
+  expect "group page: sections in order, collapsibles"   sh -c "grep -oE '<h2>[A-Z][a-z]+ [a-z]+|<details class=\"sec\"><summary>[A-Za-z]+ [a-z]+' '$OUT/www/cdb/pages/tag_ProdA_2024--run2pp.html' | sed 's/.*>//' | tr '\\n' '|' | grep -q '^Run names|Changes since|Changes in|New payload|Newest payload|Coverage plots|.*Coverage table|Payload files|'"
   expect "coverage never FAILs"                          not_has "$(latest cdb)/results.tsv" '^coverage.*FAIL'
   expect "listed X_default is folded into X"             not_has "$(latest cdb)/results.tsv" 'HCALIN_calib_default'
   expect "status csv: types in list order, no _default"  sh -c "gzip -dc '$(latest cdb)/cdb_status_tag_ProdA_2024--run3auau.csv.gz' | head -1 | grep -qx 'run,CEMC_calib,HCALIN_calib,ZDC_calib'"
