@@ -4,6 +4,7 @@
 #
 #   cdb_status_<page>.csv[.gz]  (+ cdb_fileid_<page>.csv[.gz] next to it) -> cdb_plots_<page>_<detector>.pdf
 #       one per detector of cdb_detectors_<page>.csv[.gz]; without that file: cdb_plots_<page>.pdf
+#       cdb_runnames_<page>.csv[.gz] next to it (if any): run names on the run axis
 #   cdb_fallback_<tag>.csv[.gz]  (+ cdb_detectors_<tag>.csv[.gz] if any)  -> cdb_fallback_<tag>.pdf
 #
 # A DIR means every such CSV in it, e.g. a published report:
@@ -62,14 +63,15 @@ for f in "${files[@]}"; do
       fid=$(sibling "$f" "cdb_fileid_$pg")
       [ -n "$fid" ] || { log "missing cdb_fileid_$pg.csv next to $f"; rc=1; continue; }
       det=$(sibling "$f" "cdb_detectors_$pg")
+      rn=$(sibling "$f" "cdb_runnames_$pg"); [ -n "$rn" ] && rn=$(plain "$rn")
       if [ -n "$det" ]; then
         rm -f "$dir/cdb_plots_${pg}"_*.pdf
-        run_root -e ".L $MACRO" -e "CdbDetectorPlots(\"$(plain "$f")\",\"$(plain "$fid")\",\"$(plain "$det")\",\"$(label "$pg")\",\"$dir/cdb_plots_$pg\")" || rc=1
+        run_root -e ".L $MACRO" -e "CdbDetectorPlots(\"$(plain "$f")\",\"$(plain "$fid")\",\"$(plain "$det")\",\"$(label "$pg")\",\"$dir/cdb_plots_$pg\",\"$rn\")" || rc=1
         out=$(ls "$dir/cdb_plots_${pg}"_*.pdf 2>/dev/null | head -1)
         msg="$(ls "$dir/cdb_plots_${pg}"_*.pdf 2>/dev/null | wc -l | tr -d ' ') detector PDFs $dir/cdb_plots_${pg}_*.pdf"
       else
         out=$dir/cdb_plots_$pg.pdf; msg=$out
-        run_root -e ".L $MACRO" -e "CdbStatusPlots(\"$(plain "$f")\",\"$(plain "$fid")\",\"$(label "$pg")\",\"$out\")" || rc=1
+        run_root -e ".L $MACRO" -e "CdbStatusPlots(\"$(plain "$f")\",\"$(plain "$fid")\",\"$(label "$pg")\",\"$out\",\"$rn\")" || rc=1
       fi
       ;;
     cdb_fallback_*)

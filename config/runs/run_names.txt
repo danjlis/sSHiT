@@ -1,0 +1,26 @@
+# Run number -> name, shown next to the run number in the cdb tables and plots (any tag whose runs are here).
+#   RUN  name (rest of the line)
+# MDC2 simulation runs (sPHENIX wiki, simulation run list). Status there: on disk unless noted.
+16  cosmics
+17  single particle
+18  single particle
+19  Au+Au (ana.435, removed)
+20  p+p tracking test (removed)
+21  p+p 0 mrad xing
+22  p+p 1.5 mrad (removed)
+23  Au+Au (ana.483, removed)
+24  single particle
+25  hijing 0-20fm, zero field
+26  ppg02 Au+Au sims (zero field, experimentally observed vertex distribution)
+27  ppg02 Au+Au sims (run 26 settings with 40% enhanced strangeness fraction)
+28  p+p 0 mrad xing, calo only
+29  p+p 1.5 mrad with tracking
+30  Au+Au (deleted)
+31  Au+Au ppg08, flow fluctuations enabled
+32  Au+Au ppg08, flow fluctuations disabled, scale 2 (deleted)
+33  Au+Au ppg08, no flow (deleted)
+34  O+O, 0.5 mrad
+35  O+O, 0.75 mrad
+36  Au+Au ppg14, flow fluctuations enabled, scale factor sqrt(1.3)
+37  O+O, dNdEta analysis (vertex shift, intt deadmap)
+38  run 28 setup (0 mrad xing) with +-200cm z vertex, flat distribution

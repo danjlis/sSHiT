@@ -1,0 +1,6 @@
+# test run names: 1001-1005 named (run2pp, MDC2), 1006-1010 not
+1001  cosmics
+1002  single particle
+1003  single particle
+1004  p+p 0 mrad xing, calo only
+1005  O+O, 0.5 mrad
