@@ -485,6 +485,12 @@ while IFS="$TAB" read -r mt tag pl url cnt rng; do
   printf '%s\t%s\t%s\t%s\t%s\t%s\n' "$(fmt_epoch "$mt")" "$tag" "$pl" "$url" "$cnt" "$rng" >> "$W/recent_all.tsv"
   [ "$(base_of "$tag")" = "$FLOAT" ] && result recent "$tag $pl" INFO "new payload file $(fmt_epoch "$mt"): $url ($cnt runs)"
 done < "$W/recent.raw"
+# recent_days.tsv: tag payload day nruns first last ranges   (runs that got a new file, per payload type and day)
+awk -F'\t' -v OFS='\t' 'FILENAME == ARGV[1] { d[$4] = substr($1, 1, 10); next }
+  $4 in d { print $2, $1, $3, d[$4] }' "$W/recent_all.tsv" "$W/scan.tsv" | sort -u | collapse "$W/runs.txt" 6 > "$W/recent_days.tsv"
+# recent_pl.tsv: tag payload nruns first last ranges   (the same over the whole window)
+awk -F'\t' -v OFS='\t' 'FILENAME == ARGV[1] { d[$4] = 1; next }
+  $4 in d { print $2, $1, $3 }' "$W/recent_all.tsv" "$W/scan.tsv" | sort -u | collapse "$W/runs.txt" 10 > "$W/recent_pl.tsv"
 NRECENT=$(awk -F'\t' -v ft="$FLOAT" '{ b = $2; sub(/:.*/, "", b) } b == ft { print $4 }' "$W/recent_all.tsv" | sort -u | wc -l | tr -d ' ')
 vlog "recent: $NRECENT files in $FLOAT newer than $(fmt_epoch "$CUT") ($(wc -l < "$W/recent_all.tsv" | tr -d ' ') over all tags)"
 # ages_all.tsv: tag payload distinct-files newest-date age-days newest-file
@@ -649,6 +655,12 @@ while read -r tag; do
   awk -F'\t' -v t="$tag" 'index("," $4 ",", "," t ",")' "$W/badfiles.tsv" > "$P.bad"
   awk -F'\t' -v t="$tag" 'index("," $4 ",", "," t ",")' "$W/shared.tsv" > "$P.shared"
   awk -F'\t' -v OFS='\t' -v t="$tag" '$2 == t { print $1, $3, $4, $5, $6 }' "$W/recent_all.tsv" > "$P.recent"
+  # one row per payload type: files, runs updated, run ranges, days (newest day first, newest type first)
+  awk -F'\t' -v OFS='\t' -v t="$tag" -v tnr="$tnr" '
+    FILENAME == ARGV[1] { if ($2 == t) nf[$3]++; next }
+    FILENAME == ARGV[2] { if ($1 == t) { days[$2] = $3 ": " $4 " run" ($4 == 1 ? "" : "s") " (" $7 ")" (days[$2] == "" ? "" : "<br>" days[$2]); if ($3 > top[$2]) top[$2] = $3 }; next }
+    $1 == t { print top[$2], $2, nf[$2] + 0, $3 " of " tnr, $6, days[$2] }' \
+    "$W/recent_all.tsv" "$W/recent_days.tsv" "$W/recent_pl.tsv" | sort -t"$TAB" -k1,1r -k2,2 | cut -f2- > "$P.recentpl"
   awk -F'\t' -v t="$tag" '$1 == t' "$W/ages_all.tsv" | cut -f2- > "$P.ages"
   awk -F'\t' -v OFS='\t' -v t="$tag" '$2 == t { print $1, $3, $4, $5, $6, $7, $8 }' "$W/diff.tsv" > "$P.diff"
   awk -F'\t' -v t="$tag" '{ split($1, ab, " vs "); if (ab[1] == t || ab[2] == t) print }' "$W/compare.tsv" > "$P.cmp"
@@ -701,8 +713,13 @@ while read -r tag; do
     else h_table "$P.diff" "Status|Payload type|Change|Old|New|Runs|Run ranges" 1 300; fi
 
     h_section "Changes in the last $DAYS days" "$([ "$nrecent" -gt 0 ] && echo INFO || echo OK)"
-    h_p "Payload files created in the last $DAYS days (file mtime; global tags carry no timestamps)."
-    h_table "$P.recent" "File date|Payload type|File|Runs|Run ranges" 0 200
+    h_p "Payload files created in the last $DAYS days (file mtime; global tags carry no timestamps), by payload type: how many of the $tnr runs got a new file, and on which days."
+    h_table "$P.recentpl" "Payload type|New files|Runs updated|Run ranges|Days updated (runs)" 0 0 5
+    if [ "$nrecent" -gt 0 ]; then
+      h_details "New payload files <span class=\"mut\">($nrecent)</span>"
+      h_table "$P.recent" "File date|Payload type|File|Runs|Run ranges" 0 200
+      h_details_end
+    fi
 
     h_details "Newest payload file per payload type <span class=\"mut\">($(wc -l < "$P.ages" | tr -d ' ') types)</span>"
     h_table "$P.ages" "Payload type|Distinct files|Newest file date|Age (days)|Newest file" 0
