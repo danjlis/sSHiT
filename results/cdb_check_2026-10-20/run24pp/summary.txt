@@ -1,52 +1,55 @@
 CDB availability for 1568 runs (47289-53864), 25 domains
-R = run payload, D = default only (CDBInterface falls back to it), - = nothing
+R = run payload, P = placeholder (run payload file entered under >= 3 separate IOVs to fill gaps),
+D = default only (CDBInterface falls back to it), - = nothing
 ranges are consecutive runs of the run list (count in parentheses)
 
-CEMC_BadTowerMap: R 1568, D 0, - 0, 1568 distinct payload(s)
-CEMC_calib_ADC_to_ETower: R 1568, D 0, - 0, 1 distinct payload(s)
+CEMC_BadTowerMap: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+CEMC_calib_ADC_to_ETower: R 1568, P 0, D 0, - 0, 1 distinct payload(s)
     1568 runs: 9db3df70aa7b575b5e2417904e551efa_emcal_calib_pp_47289_53864_v2.root
-CEMC_hotTowers_fracBadChi2: R 1568, D 0, - 0, 1568 distinct payload(s)
-CEMC_meanTime: R 1568, D 0, - 0, 1568 distinct payload(s)
-Centrality: R 1568, D 0, - 0, 1 distinct payload(s)
+CEMC_hotTowers_fracBadChi2: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+CEMC_meanTime: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+Centrality: R 1568, P 0, D 0, - 0, 1 distinct payload(s)
     1568 runs: 8581ee540201a80357da64e94f9be6ed_cdb_centrality_23696.root
-CentralityScale: R 0, D 0, - 1568, 1 distinct payload(s)
+CentralityScale: R 0, P 0, D 0, - 1568, 1 distinct payload(s)
   nothing:      47289-53864 (1568)
     1568 runs: NONE
-CentralityVertexScale: R 0, D 0, - 1568, 1 distinct payload(s)
+CentralityVertexScale: R 0, P 0, D 0, - 1568, 1 distinct payload(s)
   nothing:      47289-53864 (1568)
     1568 runs: NONE
-HCALIN_BadTowerMap: R 0, D 1568, - 0, 1 distinct payload(s)
+HCALIN_BadTowerMap: R 0, P 0, D 1568, - 0, 1 distinct payload(s)
   default only: 47289-53864 (1568)
     1568 runs: default:6c13ddeed34daa2e9445b0fd9e054bf4_HCALIN_HotMap_default.root
-HCALIN_calib_ADC_to_ETower: R 1562, D 6, - 0, 1563 distinct payload(s)
+HCALIN_calib_ADC_to_ETower: R 1562, P 0, D 6, - 0, 1563 distinct payload(s)
   default only: 52097-52104 (6)
-HCALIN_hotTowers_fracBadChi2: R 1568, D 0, - 0, 1568 distinct payload(s)
-HCALIN_meanTime: R 1568, D 0, - 0, 1568 distinct payload(s)
-HCALOUT_BadTowerMap: R 0, D 1568, - 0, 1 distinct payload(s)
+HCALIN_hotTowers_fracBadChi2: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+HCALIN_meanTime: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+HCALOUT_BadTowerMap: R 0, P 0, D 1568, - 0, 1 distinct payload(s)
   default only: 47289-53864 (1568)
     1568 runs: default:e832fdbec055fc0024786ab8d705012b_HCALOUT_HotMap_default.root
-HCALOUT_calib_ADC_to_ETower: R 1564, D 4, - 0, 1310 distinct payload(s)
+HCALOUT_calib_ADC_to_ETower: R 1564, P 0, D 4, - 0, 1310 distinct payload(s)
   default only: 52099-52101 (2), 52103-52104 (2)
-HCALOUT_hotTowers_fracBadChi2: R 1568, D 0, - 0, 1568 distinct payload(s)
-HCALOUT_meanTime: R 1568, D 0, - 0, 1568 distinct payload(s)
-MBD_QFIT: R 1568, D 0, - 0, 1073 distinct payload(s)
-MBD_SLEWCORR: R 1568, D 0, - 0, 1 distinct payload(s)
+HCALOUT_hotTowers_fracBadChi2: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+HCALOUT_meanTime: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+MBD_QFIT: R 1072, P 496, D 0, - 0, 1073 distinct payload(s)
+  placeholder:  47783, 48166, 49226-49228 (3), 49742, 49751, 50661, 50853-50854 (2), 50862-50863 (2), 50875, 50885-50887 (3), 51200-51206 (4), 51237, 51370-51493 (9), 51719, 52019-52022 (2), 52026-52027 (2), 52309, 52380, 52396-52401 (2), 52406, 52411, 52413, 52418, 52433, 52437, 52443, 52455, 52459, 52467-52471 (5), 52474-52481 (3), 52484, 52486-52493 (4), 52495, 52580-52581 (2), 52586-52592 (2), 52596-52610 (2), 52613, 52617, 52619-52637 (9), 52639-52643 (5), 52650-52652 (3), 52658-52660 (3), 52662-52664 (2), 52677-52680 (4), 52684-52685 (2), 52691, 52702-52703 (2), 52705-52717 (4), 52719, 52724-52754 (10), 52760-52777 (3), 52779-52805 (9), 52813-52814 (2), 52816-52845 (4), 52847-52881 (17), 52889-52896 (4), 52898-52901 (3), 52910, 52912-52917 (2), 53047-53048 (2), 53052-53243 (66), 53246-53282 (5), 53289-53292 (4), 53296-53311 (13), 53313-53340 (15), 53342-53369 (13), 53373-53375 (3), 53377-53386 (6), 53388-53406 (13), 53408-53451 (15), 53453-53467 (9), 53469-53737 (124), 53758-53864 (47)
+    placeholder file: b77aaa064fc5b5632fa70897e7ccf32e_mbd_qfit_40507.root (108 IOVs)
+MBD_SLEWCORR: R 1568, P 0, D 0, - 0, 1 distinct payload(s)
     1568 runs: c97e1dec329fff3a68988d07f3a201c4_mbd_slewcorr_40507_v2.root
-MBD_T0CORR: R 1370, D 0, - 198, 1371 distinct payload(s)
+MBD_T0CORR: R 1370, P 0, D 0, - 198, 1371 distinct payload(s)
   nothing:      48900-49035 (35), 49042-49144 (51), 49155-49224 (10), 49229-49652 (101), 52844
-MBD_TIMECORR: R 1568, D 0, - 0, 1 distinct payload(s)
+MBD_TIMECORR: R 1568, P 0, D 0, - 0, 1 distinct payload(s)
     1568 runs: ef2f2937016c780fede78de66a6fe76e_mbd_timecorr-47260_47274.root
-MBD_TQ_T0: R 1568, D 0, - 0, 1 distinct payload(s)
+MBD_TQ_T0: R 1568, P 0, D 0, - 0, 1 distinct payload(s)
     1568 runs: 2c2fd69a03184d0dbbd5b9698b270204_mbd_tq_t0_45026_v2.root
-MBD_TT_T0: R 1568, D 0, - 0, 1 distinct payload(s)
+MBD_TT_T0: R 1568, P 0, D 0, - 0, 1 distinct payload(s)
     1568 runs: 6029168b6bab7cd4be5958d91574aa3f_mbd_tt_t0_45026_v2.root
-SEPD_BadTowerMap: R 0, D 0, - 1568, 1 distinct payload(s)
+SEPD_BadTowerMap: R 0, P 0, D 0, - 1568, 1 distinct payload(s)
   nothing:      47289-53864 (1568)
     1568 runs: NONE
-SEPD_EventPlaneCalib: R 0, D 0, - 1568, 1 distinct payload(s)
+SEPD_EventPlaneCalib: R 0, P 0, D 0, - 1568, 1 distinct payload(s)
   nothing:      47289-53864 (1568)
     1568 runs: NONE
-SEPD_NMIP_CALIB: R 1568, D 0, - 0, 1 distinct payload(s)
+SEPD_NMIP_CALIB: R 1568, P 0, D 0, - 0, 1 distinct payload(s)
     1568 runs: f23b23c2017de9768ac5d7e67367a6ee_SEPD_NMIP_CALIB_v4.root
-data_driven_zdc_calib: R 1568, D 0, - 0, 1 distinct payload(s)
+data_driven_zdc_calib: R 1568, P 0, D 0, - 0, 1 distinct payload(s)
     1568 runs: a45ebfcc7edad9cb44cf3ba0403447eb_data_driven_zdc_calib_v3.root

@@ -1,35 +1,38 @@
 CDB payloads per running period: runs with no run payload
-  default = falls back to <domain>_default (CDBInterface uses it);  missing = no run payload and no default
-  each cell: default / missing  (out of the period's run count)
+  default     = no run payload, falls back to <domain>_default (CDBInterface uses it)
+  placeholder = the run payload is a gap-filler file: one file entered under >= 3 separate IOVs of the domain
+                (e.g. MBD_QFIT mbd_qfit_40507.root, 108 IOVs), not a calibration of that run
+  missing     = no run payload and no default
+  each cell: default / placeholder / missing  (out of the period's run count)
   run lists: Run24 p+p calo-jet GRL, Run24 Au+Au GRL, Run25 Au+Au GRL, Run25 O+O GRL,
              Run25 p+p all pro001 runs 79151-81668 (no GRL exists);  global tag newcdbtag (= ProdA_2024)
 
 domain                        |      Run24 p+p (1568) |      Run24 Au+Au (71) |    Run25 Au+Au (2771) |       Run25 O+O (134) |       Run25 p+p (852)
 -----------------------------------------------------------------------------------------------------------------------------------------------------
-CEMC_BadTowerMap              |                    ok |                10 / 0 |                    ok |                    ok |                43 / 0
+CEMC_BadTowerMap              |                    ok |            10 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
 CEMC_calib_ADC_to_ETower      |                    ok |                    ok |                    ok |                    ok |                    ok
-CEMC_hotTowers_fracBadChi2    |                    ok |                14 / 0 |                    ok |                    ok |                43 / 0
-CEMC_meanTime                 |                    ok |                14 / 0 |                    ok |                    ok |                43 / 0
-Centrality                    |                    ok |                    ok |                    ok |                 1 / 0 |               852 / 0
-CentralityScale               |              0 / 1568 |                 0 / 2 |                    ok |                 1 / 0 |               852 / 0
-CentralityVertexScale         |              0 / 1568 |                 0 / 2 |                    ok |                 1 / 0 |               852 / 0
-HCALIN_BadTowerMap            |              1568 / 0 |                71 / 0 |                    ok |                    ok |               852 / 0
-HCALIN_calib_ADC_to_ETower    |                 6 / 0 |                    ok |              2771 / 0 |                    ok |               852 / 0
-HCALIN_hotTowers_fracBadChi2  |                    ok |                14 / 0 |                    ok |                    ok |                43 / 0
-HCALIN_meanTime               |                    ok |                14 / 0 |                    ok |                    ok |                43 / 0
-HCALOUT_BadTowerMap           |              1568 / 0 |                71 / 0 |                    ok |                    ok |               852 / 0
-HCALOUT_calib_ADC_to_ETower   |                 4 / 0 |                    ok |              2771 / 0 |                    ok |               852 / 0
-HCALOUT_hotTowers_fracBadChi2 |                    ok |                14 / 0 |                    ok |                    ok |                43 / 0
-HCALOUT_meanTime              |                    ok |                14 / 0 |                    ok |                    ok |                43 / 0
-MBD_QFIT                      |                    ok |                0 / 16 |                29 / 0 |                    ok |               852 / 0
+CEMC_hotTowers_fracBadChi2    |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
+CEMC_meanTime                 |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
+Centrality                    |                    ok |                    ok |                    ok |             1 / 0 / 0 |           852 / 0 / 0
+CentralityScale               |          0 / 0 / 1568 |             0 / 0 / 2 |                    ok |             1 / 0 / 0 |           852 / 0 / 0
+CentralityVertexScale         |          0 / 0 / 1568 |             0 / 0 / 2 |                    ok |             1 / 0 / 0 |           852 / 0 / 0
+HCALIN_BadTowerMap            |          1568 / 0 / 0 |            71 / 0 / 0 |                    ok |                    ok |           852 / 0 / 0
+HCALIN_calib_ADC_to_ETower    |             6 / 0 / 0 |                    ok |          2771 / 0 / 0 |                    ok |           852 / 0 / 0
+HCALIN_hotTowers_fracBadChi2  |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
+HCALIN_meanTime               |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
+HCALOUT_BadTowerMap           |          1568 / 0 / 0 |            71 / 0 / 0 |                    ok |                    ok |           852 / 0 / 0
+HCALOUT_calib_ADC_to_ETower   |             4 / 0 / 0 |                    ok |          2771 / 0 / 0 |                    ok |           852 / 0 / 0
+HCALOUT_hotTowers_fracBadChi2 |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
+HCALOUT_meanTime              |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
+MBD_QFIT                      |           0 / 496 / 0 |            0 / 0 / 16 |            29 / 0 / 0 |                    ok |           852 / 0 / 0
 MBD_SLEWCORR                  |                    ok |                    ok |                    ok |                    ok |                    ok
-MBD_T0CORR                    |               0 / 198 |                 0 / 6 |               0 / 310 |               0 / 134 |               0 / 852
+MBD_T0CORR                    |           0 / 0 / 198 |             0 / 0 / 6 |           0 / 0 / 310 |           0 / 0 / 134 |           0 / 0 / 852
 MBD_TIMECORR                  |                    ok |                    ok |                    ok |                    ok |                    ok
 MBD_TQ_T0                     |                    ok |                    ok |                    ok |                    ok |                    ok
 MBD_TT_T0                     |                    ok |                    ok |                    ok |                    ok |                    ok
-SEPD_BadTowerMap              |              0 / 1568 |                0 / 28 |              0 / 2771 |               0 / 134 |               0 / 852
-SEPD_EventPlaneCalib          |              0 / 1568 |                0 / 28 |                0 / 16 |               0 / 134 |               0 / 852
+SEPD_BadTowerMap              |          0 / 0 / 1568 |            0 / 0 / 28 |          0 / 0 / 2771 |           0 / 0 / 134 |           0 / 0 / 852
+SEPD_EventPlaneCalib          |          0 / 0 / 1568 |            0 / 0 / 28 |            0 / 0 / 16 |           0 / 0 / 134 |           0 / 0 / 852
 SEPD_NMIP_CALIB               |                    ok |                    ok |                    ok |                    ok |                    ok
 data_driven_zdc_calib         |                    ok |                    ok |                    ok |                    ok |                    ok
 
-'ok' = every run has its own payload. Which runs: periods/<period>/summary.txt (run ranges) and cdb_status.csv (per run).
+'ok' = every run has a payload of its own. Which runs: periods/<period>/summary.txt (run ranges) and cdb_status.csv (per run).

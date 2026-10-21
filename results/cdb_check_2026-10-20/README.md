@@ -4,6 +4,10 @@ For every run of each period's run list and every payload type below, the CDB wa
 and for `<payload>_default`. Each run is then one of:
 
 - **run payload**: the run has its own payload (it may still be one file shared by a whole run range);
+- **placeholder**: the run payload is a gap filler, i.e. one file entered under at least 3 separate IOVs of that
+  payload type (counted over the runs of all five periods), so the run has no calibration of its own. The only one
+  found is MBD_QFIT `mbd_qfit_40507.root`, a payload from run 40507 (before the first Run 24 p+p golden run, 47289)
+  entered under 108 separate IOVs between per-run payloads. Every other file is entered under at most 2 IOVs;
 - **default**: no run payload, so `CDBInterface` falls back to `<payload>_default`;
 - **missing**: neither exists, so the reconstruction runs without that calibration.
 
@@ -26,18 +30,23 @@ run25auau 2756 of 2771 (run3auau 3141), run25oo 134 of 134 (run3oo 135), run25pp
 
 | file | content |
 |---|---|
-| `cdb_missing_default.txt` | **the table**: per payload type and period, `default / missing` run counts (`ok` = every run has a run payload) |
-| `cdb_missing_default.csv` | the same, machine readable (`<period>_nruns`, `_default`, `_missing`) |
+| `cdb_missing_default.txt` | **the table**: per payload type and period, `default / placeholder / missing` run counts (`ok` = every run has a payload of its own) |
+| `cdb_missing_default.csv` | the same, machine readable (`<period>_nruns`, `_default`, `_placeholder`, `_missing`) |
 | `cdb_check_all_periods.pdf` | the per-run status grid of every period, one page each |
 | `<period>/cdb_check.pdf` | p1 status grid (payload type vs run), p2 fraction of runs per status, p3 which payload file each run gets |
-| `<period>/summary.txt` | per payload type: counts, the runs (as ranges) with default only or nothing, and the distinct payload files |
-| `<period>/cdb_status.csv` | run x payload type: `R` (run payload), `D` (default), `-` (missing) |
+| `<period>/summary.txt` | per payload type: counts, the runs (as ranges) with a placeholder, default only or nothing, and the distinct payload files |
+| `<period>/cdb_status.csv` | run x payload type: `R` (run payload), `P` (placeholder), `D` (default), `-` (missing) |
 
 The per-run payload file names (`cdb_payloads.csv`, 9 MB in total) are not included; they are on RCF in
 `/sphenix/user/samfred/projects/cdb_check/periods/<period>/`, together with the scripts that made all of this
 (`CheckRuns.C`, `Draw_CDBCheck.C`, `make_table.py`; the payload list is `../cdbtools/checkCDB.C`).
+`CheckRuns.C` queries `CDBUtils::PayloadIOVs(run)` like `checks/cdb/macros/CdbScan.C`; running `CdbScan.C` on
+every run of the five lists gives the same payload for all 269,800 (run, payload type) lookups.
 
 ## Main findings
+
+- `MBD_QFIT` in Run 24 p+p: 496 of 1568 runs get the placeholder `mbd_qfit_40507.root` instead of a run calibration,
+  461 of them from 52309 to the end of the period (also 50661-50887, 51200-51493 and single runs).
 
 - `MBD_T0CORR` has no payload and no default for every Run 25 p+p and O+O run, and for 198 Run 24 p+p
   (48900-49652, 52844), 6 Run 24 Au+Au and 310 Run 25 Au+Au runs.

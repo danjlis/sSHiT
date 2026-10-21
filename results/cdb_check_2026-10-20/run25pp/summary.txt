@@ -1,68 +1,69 @@
 CDB availability for 852 runs (79151-81668), 25 domains
-R = run payload, D = default only (CDBInterface falls back to it), - = nothing
+R = run payload, P = placeholder (run payload file entered under >= 3 separate IOVs to fill gaps),
+D = default only (CDBInterface falls back to it), - = nothing
 ranges are consecutive runs of the run list (count in parentheses)
 
-CEMC_BadTowerMap: R 809, D 43, - 0, 810 distinct payload(s)
+CEMC_BadTowerMap: R 809, P 0, D 43, - 0, 810 distinct payload(s)
   default only: 79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
-CEMC_calib_ADC_to_ETower: R 852, D 0, - 0, 1 distinct payload(s)
+CEMC_calib_ADC_to_ETower: R 852, P 0, D 0, - 0, 1 distinct payload(s)
     852 runs: 77e7be3e9a85d44598aae5c5c044c582_EMCAL_ADC_to_Etower-new_newcdbtag_v008-78218.root
-CEMC_hotTowers_fracBadChi2: R 809, D 43, - 0, 810 distinct payload(s)
+CEMC_hotTowers_fracBadChi2: R 809, P 0, D 43, - 0, 810 distinct payload(s)
   default only: 79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
-CEMC_meanTime: R 809, D 43, - 0, 810 distinct payload(s)
+CEMC_meanTime: R 809, P 0, D 43, - 0, 810 distinct payload(s)
   default only: 79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
-Centrality: R 0, D 852, - 0, 1 distinct payload(s)
+Centrality: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:fbc61c197c51da766818718f441d0767_cdb_centrality_66701.root
-CentralityScale: R 0, D 852, - 0, 1 distinct payload(s)
+CentralityScale: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:b545fdba19617fa873fc0bc9edd9feb7_cdb_centrality_scale_v2_66701.root
-CentralityVertexScale: R 0, D 852, - 0, 1 distinct payload(s)
+CentralityVertexScale: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:b05626ec4ba67f64eb661f7e63e48d72_cdb_centrality_vertex_scale_66701.root
-HCALIN_BadTowerMap: R 0, D 852, - 0, 1 distinct payload(s)
+HCALIN_BadTowerMap: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:6c13ddeed34daa2e9445b0fd9e054bf4_HCALIN_HotMap_default.root
-HCALIN_calib_ADC_to_ETower: R 0, D 852, - 0, 1 distinct payload(s)
+HCALIN_calib_ADC_to_ETower: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:182b0c488f11ffe7bfadb644137ab020_ihcal_cdb_tsc_cos_calib_77106.root
-HCALIN_hotTowers_fracBadChi2: R 809, D 43, - 0, 810 distinct payload(s)
+HCALIN_hotTowers_fracBadChi2: R 809, P 0, D 43, - 0, 810 distinct payload(s)
   default only: 79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
-HCALIN_meanTime: R 809, D 43, - 0, 810 distinct payload(s)
+HCALIN_meanTime: R 809, P 0, D 43, - 0, 810 distinct payload(s)
   default only: 79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
-HCALOUT_BadTowerMap: R 0, D 852, - 0, 1 distinct payload(s)
+HCALOUT_BadTowerMap: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:e832fdbec055fc0024786ab8d705012b_HCALOUT_HotMap_default.root
-HCALOUT_calib_ADC_to_ETower: R 0, D 852, - 0, 1 distinct payload(s)
+HCALOUT_calib_ADC_to_ETower: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:929235c1ae16d0b802d594a1acf11aa7_ohcal_cdb_tsc_cos_calib_77106.root
-HCALOUT_hotTowers_fracBadChi2: R 809, D 43, - 0, 810 distinct payload(s)
+HCALOUT_hotTowers_fracBadChi2: R 809, P 0, D 43, - 0, 810 distinct payload(s)
   default only: 79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
-HCALOUT_meanTime: R 809, D 43, - 0, 810 distinct payload(s)
+HCALOUT_meanTime: R 809, P 0, D 43, - 0, 810 distinct payload(s)
   default only: 79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
-MBD_QFIT: R 0, D 852, - 0, 1 distinct payload(s)
+MBD_QFIT: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:b56877423bc38a59861755500c84b932_mbd_qfit_79151_99999.root
-MBD_SLEWCORR: R 852, D 0, - 0, 2 distinct payload(s)
+MBD_SLEWCORR: R 852, P 0, D 0, - 0, 2 distinct payload(s)
     2 runs: 80af8cdb64f52033f4906691f2499bf6_mbd_slewcorr_66737.root
     850 runs: c90e488f2f8f225ad7795a33f0fa22c7_mbd_slewcorr_79153.root
-MBD_T0CORR: R 0, D 0, - 852, 1 distinct payload(s)
+MBD_T0CORR: R 0, P 0, D 0, - 852, 1 distinct payload(s)
   nothing:      79151-81668 (852)
     852 runs: NONE
-MBD_TIMECORR: R 852, D 0, - 0, 1 distinct payload(s)
+MBD_TIMECORR: R 852, P 0, D 0, - 0, 1 distinct payload(s)
     852 runs: abe2df56de561af3655488b5718be559_mbd_timecorr-78965_82908.root
-MBD_TQ_T0: R 852, D 0, - 0, 2 distinct payload(s)
+MBD_TQ_T0: R 852, P 0, D 0, - 0, 2 distinct payload(s)
     850 runs: 53be5f1a835022652fa9533bb031db79_mbd_tq_t0-79153-01.root
     2 runs: 57f4575618a38e570ec9a29d5117f73a_mbd_tq_t0_66737v1.root
-MBD_TT_T0: R 852, D 0, - 0, 2 distinct payload(s)
+MBD_TT_T0: R 852, P 0, D 0, - 0, 2 distinct payload(s)
     850 runs: 35030dc36dc24cd242f1a52132905e5e_mbd_tt_t0-79153-01.root
     2 runs: 863e635e6434ba42047f55547ec170bc_mbd_tt_t0-68490.root
-SEPD_BadTowerMap: R 0, D 0, - 852, 1 distinct payload(s)
+SEPD_BadTowerMap: R 0, P 0, D 0, - 852, 1 distinct payload(s)
   nothing:      79151-81668 (852)
     852 runs: NONE
-SEPD_EventPlaneCalib: R 0, D 0, - 852, 1 distinct payload(s)
+SEPD_EventPlaneCalib: R 0, P 0, D 0, - 852, 1 distinct payload(s)
   nothing:      79151-81668 (852)
     852 runs: NONE
-SEPD_NMIP_CALIB: R 852, D 0, - 0, 1 distinct payload(s)
+SEPD_NMIP_CALIB: R 852, P 0, D 0, - 0, 1 distinct payload(s)
     852 runs: 866db5abdca24d60cc47f8856c8e97f4_sEPD_CalibConstants_CDB_Run71504_v2.root
-data_driven_zdc_calib: R 852, D 0, - 0, 1 distinct payload(s)
+data_driven_zdc_calib: R 852, P 0, D 0, - 0, 1 distinct payload(s)
     852 runs: a45ebfcc7edad9cb44cf3ba0403447eb_data_driven_zdc_calib_v3.root
