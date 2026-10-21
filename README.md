@@ -69,7 +69,7 @@ Each line of `config/global_tags.txt` is `TAG [runlist [payloadlist]]` (paths re
 or absolute; `-` or a missing column = the default `CDB_GOODRUN_LIST` / `CDB_PAYLOADS_FILE`):
 
 ```
-ProdA_2024   runs/prodA_2024.txt   payloads/prodA_calo.txt
+newcdbtag   runs/prodA_2024.txt   payloads/prodA_calo.txt
 MDC2         -                     payloads/mdc2_calo.txt
 ```
 
@@ -78,15 +78,15 @@ summarizes all its groups and links to a tag page showing each group's card and 
 links to that group's full page. The CDB is queried once per tag, over all its groups' runs:
 
 ```
-ProdA_2024:run2pp     runs/run2pp.txt     payloads/prodA_calo.txt
-ProdA_2024:run2auau   runs/run2auau.txt   payloads/prodA_calo.txt
-ProdA_2024:run3auau   runs/run3auau.txt   payloads/prodA_calo.txt
-ProdA_2024:run3pp     runs/run3pp.txt     payloads/prodA_calo.txt
-ProdA_2024:run3oo     runs/run3oo.txt     payloads/prodA_calo.txt
+newcdbtag:run2pp     runs/run2pp.txt     payloads/prodA_calo.txt
+newcdbtag:run2auau   runs/run2auau.txt   payloads/prodA_calo.txt
+newcdbtag:run3auau   runs/run3auau.txt   payloads/prodA_calo.txt
+newcdbtag:run3pp     runs/run3pp.txt     payloads/prodA_calo.txt
+newcdbtag:run3oo     runs/run3oo.txt     payloads/prodA_calo.txt
 MDC2                  runs/mdc2.txt       payloads/mdc2_calo.txt
 ```
 
-`--tag ProdA_2024` checks all its groups and `--tag ProdA_2024:run3oo` checks just one. The other groups keep their last result.
+`--tag newcdbtag` checks all its groups and `--tag newcdbtag:run3oo` checks just one. The other groups keep their last result.
 
 Single tag: `./shirt.sh run cdb --tag MDC2` (uses MDC2's own lists; `--runs FILE` / `--payload TYPE` override). A single-tag
 run only replaces that tag's card and page; the other cards stay from their last check.
@@ -112,12 +112,16 @@ one embedded plot set per detector (`cdb_plots_<page>_<DETECTOR>.pdf`, from `cdb
 tag page table and plot are grouped by detector. `@groups` limits a detector to those run groups: `Global`
 (ZDC, centrality, event plane) is only watched for run2auau, run3auau and run3oo; the pp groups skip it entirely.
 
+**Run names.** `config/runs/run_names.txt` (`RUN name`) names runs, e.g. the MDC2 simulation runs. A tag with
+named runs gets a run/name table on its page, the named runs in its run lists ("16 cosmics, 21 p+p 0 mrad xing"),
+and, with up to 80 runs, every run labelled with its name in the plots (`cdb_runnames_<page>.csv`).
+
 Redraw any report without rerunning the check: `checks/cdb/draw.sh [-o OUTDIR] <report dir or CSVs>`.
 `CDB_PLOTS=0` turns drawing off; without ROOT the pages say the plots were not drawn and the CSVs are still there.
 A new plot = a new function in `CdbPlots.C` that reads CSVs, and a line in `draw.sh`.
 
 The CDB check is read-only (`CDBUtils::PayloadIOVs`, `listGlobalTags`, `listPayloadTypes`).
-`CDB_FLOATING_TAG` (ProdA_2024) is the moving tag: its changes are reported; changes to any other tag FAIL.
+`CDB_FLOATING_TAG` (newcdbtag) is the moving tag: its changes are reported; changes to any other tag FAIL.
 File dates come from payload-file mtimes, since global tags have no timestamps.
 
 ## DST check (on RCF)

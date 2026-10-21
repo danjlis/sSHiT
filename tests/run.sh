@@ -63,15 +63,22 @@ CDB_PAYLOADS_FILE=$C/cfg/payloads.txt
 CDB_GOODRUN_LIST=$C/cfg/goodruns.txt
 CDB_COMPARE_PAIRS=("ProdA_2024:Frozen_v1")
 CDB_DETECTORS_FILE=$C/cfg/detectors.txt
+CDB_FLOATING_TAG=ProdA_2024
+CDB_RUN_NAMES_FILE=$C/cfg/run_names.txt
 CDB_ROOT_CHECK=0
 EOF
   SHIRT_CDB_MOCK_DIR=$C shirt cdb1 run cdb --test -c "$OUT/cdb.conf"; rc=$?
   [ -n "$VERBOSE" ] && echo "    exit $rc: $(summary cdb)"
   expect "first run exits 2 (FAIL)"                      test $rc = 2
   expect "summary counts"                                has "$OUT/www/cdb/index.html" '3 tags \(4 tags/run groups\) x 3 payload types x 10 runs, 7 payload files: 1 \(tag, payload type\) with default-only runs, 4 with runs that have nothing'
-  expect "run2pp HCALIN: nothing at 1004 (WARN)"         has "$(latest cdb)/results.tsv" 'run2pp HCALIN_calib.WARN.nothing \(no payload, no default\): 1 of 5 runs: 1004$'
+  expect "run2pp HCALIN: nothing at 1004 (WARN)"         has "$(latest cdb)/results.tsv" 'run2pp HCALIN_calib.WARN.nothing \(no payload, no default\): 1 of 5 runs: 1004 p\+p 0 mrad xing, calo only$'
   expect "run3auau HCALIN: default only at 1007-1008"    has "$(latest cdb)/results.tsv" 'run3auau HCALIN_calib.WARN.default only: 2 of 5 runs: 1007-1008$'
   expect "MDC2: nothing at all runs (WARN)"              result cdb coverage 'MDC2 (CEMC|HCALIN|ZDC)_calib' WARN
+  expect "unnamed runs keep their ranges"                has "$(latest cdb)/results.tsv" 'MDC2 CEMC_calib.WARN.nothing .*: 10 of 10 runs: 1001 cosmics, 1002 single particle, 1003 single particle, 1004 p\+p 0 mrad xing, calo only, 1005 O\+O, 0.5 mrad, 1006, 1007, 1008, 1009, 1010$'
+  expect "run names csv for a tag with named runs"       sh -c "gzip -dc '$(latest cdb)/cdb_runnames_tag_ProdA_2024--run2pp.csv.gz' | grep -qx '1005,O+O, 0.5 mrad'"
+  expect "  ... none for a tag without"                  test ! -e "$(latest cdb)/cdb_runnames_tag_ProdA_2024--run3auau.csv.gz"
+  expect "tag page lists the run names"                  has "$OUT/www/cdb/pages/tag_ProdA_2024--run2pp.html" '<td>1004</td><td>p\+p 0 mrad xing, calo only</td>'
+  expect "group page: sections in order, collapsibles"   sh -c "grep -oE '<h2>[A-Z][a-z]+ [a-z]+|<details class=\"sec\"><summary>[A-Za-z]+ [a-z]+' '$OUT/www/cdb/pages/tag_ProdA_2024--run2pp.html' | sed 's/.*>//' | tr '\\n' '|' | grep -q '^Run names|Changes since|Changes in|Newest payload|Coverage plots|.*Coverage table|Payload files|'"
   expect "coverage never FAILs"                          not_has "$(latest cdb)/results.tsv" '^coverage.*FAIL'
   expect "listed X_default is folded into X"             not_has "$(latest cdb)/results.tsv" 'HCALIN_calib_default'
   expect "status csv: types in list order, no _default"  sh -c "gzip -dc '$(latest cdb)/cdb_status_tag_ProdA_2024--run3auau.csv.gz' | head -1 | grep -qx 'run,CEMC_calib,HCALIN_calib,ZDC_calib'"

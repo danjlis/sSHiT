@@ -6,6 +6,8 @@
 //   p1 status per run, p2 fraction of runs per status, p3 which payload file each run gets
 // CdbDetectorPlots(status, fileid, detectors, title, outprefix)   the same, one PDF per detector:
 //   detectors cdb_detectors_<page>.csv  payload,detector (detector order) -> <outprefix>_<detector>.pdf
+// Both take an optional last argument runnames = cdb_runnames_<page>.csv (run,name): with up to 80 runs
+// every run is labelled "run name" on the run axis.
 // CdbFallbackPlot(fallback, title, out)        one global tag over its run groups, 1 page:
 //   fallback cdb_fallback_<tag>.csv  domain,<g>_nruns,<g>_default,<g>_missing,...
 //   cell "ok" / "default / nothing"; green = all own payloads, orange = some default only, red = some nothing
@@ -22,6 +24,7 @@
 #include <algorithm>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -59,36 +62,83 @@ namespace
   const int kColNone = TColor::GetColor("#cc0000");
   const int kColNotWatched = TColor::GetColor("#dddddd");
 
-  // canvas tall enough for one row per payload type, left margin for the longest name
-  TCanvas *MakeCanvas(const char *name, const std::vector<std::string> &rows, int width = 1500)
+  // run -> name (cdb_runnames_*.csv), used for the run-axis labels
+  std::map<std::string, std::string> gRunNames;
+  const size_t kMaxRunLabel = 48;
+  const int kMaxNamedRuns = 80;
+
+  void ReadRunNames(const std::string &fname)
+  {
+    gRunNames.clear();
+    if (fname.empty()) return;
+    std::ifstream in(fname);
+    std::string line;
+    std::getline(in, line);  // header
+    while (std::getline(in, line))
+    {
+      size_t k = line.find(',');
+      if (k != std::string::npos) gRunNames[line.substr(0, k)] = line.substr(k + 1);
+    }
+  }
+
+  std::string RunLabel(const std::string &run)
+  {
+    auto it = gRunNames.find(run);
+    if (it == gRunNames.end()) return run;
+    std::string l = run + " " + it->second;
+    return l.size() > kMaxRunLabel ? l.substr(0, kMaxRunLabel - 3) + "..." : l;
+  }
+
+  // every run labelled with its name (few named runs), else run numbers on ~10 bins
+  bool NamedRuns(const Table &t) { return !gRunNames.empty() && static_cast<int>(t.size()) - 1 <= kMaxNamedRuns; }
+
+  // canvas tall enough for one row per payload type, left margin for the longest name,
+  // bottom margin for the run labels (bottom pixels)
+  TCanvas *MakeCanvas(const char *name, const std::vector<std::string> &rows, int width = 1500, int bottom = 50)
   {
     size_t maxlen = 10;
     for (const auto &r : rows) maxlen = std::max(maxlen, r.size());
-    int height = std::min(6000, std::max(400, 170 + 22 * static_cast<int>(rows.size())));
+    int height = std::min(6000, std::max(400, 170 + 22 * static_cast<int>(rows.size()))) + bottom - 50;
     auto *c = new TCanvas(name, name, width, height);
     c->SetLeftMargin(std::min(0.45, (7.0 * maxlen + 30) / width));
     c->SetRightMargin(0.04);
     c->SetTopMargin(120.0 / height);
-    c->SetBottomMargin(50.0 / height);
+    c->SetBottomMargin(static_cast<double>(bottom) / height);
     return c;
   }
 
-  // run-number labels on ~10 evenly spaced bins of the run axis
+  int RunLabelSpace(const Table &t)
+  {
+    if (!NamedRuns(t)) return 50;
+    size_t m = 0;
+    for (size_t i = 1; i < t.size(); ++i) m = std::max(m, RunLabel(t[i][0]).size());
+    return 40 + 10 * static_cast<int>(m);
+  }
+
   void RunLabels(TH2 *h, const Table &t)
   {
     int n = t.size() - 1;
-    int step = std::max(1, n / 10);
-    for (int i = 1; i <= n; i += step) h->GetXaxis()->SetBinLabel(i, t[i][0].c_str());
-    h->GetXaxis()->SetBinLabel(n, t[n][0].c_str());
-    h->GetXaxis()->LabelsOption("h");
-    h->GetXaxis()->SetLabelSize(0.025);
+    if (NamedRuns(t))
+    {
+      for (int i = 1; i <= n; ++i) h->GetXaxis()->SetBinLabel(i, RunLabel(t[i][0]).c_str());
+      h->GetXaxis()->LabelsOption("v");
+      h->GetXaxis()->SetLabelSize(std::min(0.035, 15.0 / h->GetXaxis()->GetNbins() * 0.04));
+    }
+    else
+    {
+      int step = std::max(1, n / 10);
+      for (int i = 1; i <= n; i += step) h->GetXaxis()->SetBinLabel(i, t[i][0].c_str());
+      h->GetXaxis()->SetBinLabel(n, t[n][0].c_str());
+      h->GetXaxis()->LabelsOption("h");
+      h->GetXaxis()->SetLabelSize(0.025);
+    }
     h->GetXaxis()->SetTickLength(0);
   }
 
   void TypeLabels(TH2 *h, const std::vector<std::string> &types, double height)
   {
     for (size_t j = 0; j < types.size(); ++j) h->GetYaxis()->SetBinLabel(j + 1, types[j].c_str());
-    h->GetYaxis()->SetLabelSize(std::min(0.03, 11.0 / height));
+    h->GetYaxis()->SetLabelSize(std::min(0.035, 15.0 / height));
     h->GetYaxis()->SetTickLength(0);
   }
 
@@ -155,8 +205,9 @@ namespace
 void DrawStatus(const Table &st, const Table &fi, const std::string &title, const std::string &out);
 
 void CdbStatusPlots(const std::string &status, const std::string &fileid,
-                    const std::string &title, const std::string &out)
+                    const std::string &title, const std::string &out, const std::string &runnames = "")
 {
+  ReadRunNames(runnames);
   Table st = ReadCsv(status);
   if (st.size() < 2 || st[0].size() < 2)
   {
@@ -167,8 +218,9 @@ void CdbStatusPlots(const std::string &status, const std::string &fileid,
 }
 
 void CdbDetectorPlots(const std::string &status, const std::string &fileid, const std::string &detectors,
-                      const std::string &title, const std::string &outprefix)
+                      const std::string &title, const std::string &outprefix, const std::string &runnames = "")
 {
+  ReadRunNames(runnames);
   Table st = ReadCsv(status);
   Table fi = ReadCsv(fileid);
   if (st.size() < 2 || st[0].size() < 2)
@@ -199,7 +251,7 @@ void DrawStatus(const Table &st, const Table &fi, const std::string &title, cons
   std::string runs = std::to_string(nrun) + " runs (" + st[1][0] + "-" + st[nrun][0] + "), " + std::to_string(ntype) + " payload types";
 
   // ---- p1: status per run
-  TCanvas *c = MakeCanvas("cdb_status", types);
+  TCanvas *c = MakeCanvas("cdb_status", types, 1500, RunLabelSpace(st));
   auto *h = new TH2F("h_status", "", nrun, 0, nrun, ntype, 0, ntype);
   std::vector<int> nown(ntype, 0), ndef(ntype, 0), nnone(ntype, 0);
   for (int i = 1; i <= nrun; ++i)
@@ -222,8 +274,10 @@ void DrawStatus(const Table &st, const Table &fi, const std::string &title, cons
   Header(c, title + ": " + runs, "", true);
   c->Print((out + "(").c_str(), "pdf");
 
-  // ---- p2: fraction of runs per status
+  // ---- p2: fraction of runs per status (no run axis: normal bottom margin)
+  double bottom = c->GetBottomMargin();
   c->Clear();
+  c->SetBottomMargin(60.0 / c->GetWh());
   auto *f = new TH2F("h_frac", "", 1, 0, 1, ntype, 0, ntype);
   TypeLabels(f, types, c->GetWh());
   f->GetXaxis()->SetTitle("fraction of runs");
@@ -252,6 +306,7 @@ void DrawStatus(const Table &st, const Table &fi, const std::string &title, cons
 
   // ---- p3: which payload file each run gets (colour = file number within the type, white = nothing)
   c->Clear();
+  c->SetBottomMargin(bottom);
   auto *m = new TH2F("h_file", "", nrun, 0, nrun, ntype, 0, ntype);
   std::vector<int> maxid(ntype, 0);
   for (int i = 1; i < static_cast<int>(fi.size()); ++i)

@@ -24,13 +24,13 @@
 # Per-tag lists: a line in CDB_TAGS_FILE is "TAG [runlist [payloadlist]]", paths relative to
 # the tags file's directory (or absolute); "-" or a missing column means the default
 # (CDB_GOODRUN_LIST / CDB_PAYLOADS_FILE), e.g.
-#   ProdA_2024  runs/prodA.txt  payloads/prodA.txt
+#   newcdbtag  runs/prodA.txt  payloads/prodA.txt
 #   MDC2        -               payloads/mdc2.txt
 # Run groups: "TAG:GROUP" checks TAG with that group's own lists; the tag gets one page/card
 # summarizing its groups, each group its own page/card. --tag TAG selects all its groups,
 # --tag TAG:GROUP just one. The CDB is queried once per tag (union of its groups' runs).
-#   ProdA_2024:run2pp    runs/run2pp.txt    payloads/prodA.txt
-#   ProdA_2024:run3auau  runs/run3auau.txt  payloads/prodA.txt
+#   newcdbtag:run2pp    runs/run2pp.txt    payloads/prodA.txt
+#   newcdbtag:run3auau  runs/run3auau.txt  payloads/prodA.txt
 # A run with --tag/--payload is a subset run: it is diffed against the last snapshot
 # but does not store its own, so full runs always compare against a full snapshot.
 #
@@ -399,6 +399,18 @@ while IFS="$TAB" read -r t pg; do
   grep -qx "$t" "$W/badtags.txt" && continue
   { echo "payload,detector"; awk -F'\t' -v OFS=',' '{ print $3, NR, $1, $2 }' "$W/det/${pg#tag_}.tsv" | sort -t, -k1,1n -k2,2n | cut -d, -f3,4; } > "$W/csv/cdb_detectors_$pg.csv"
 done < "$W/tagpage.tsv"
+# run names (CDB_RUN_NAMES_FILE: "RUN name..."): cdb_runnames_<page>.csv (run,name) for tags with named runs
+: > "$W/runnames.tsv"
+[ -n "$CDB_RUN_NAMES_FILE" ] && [ -s "$CDB_RUN_NAMES_FILE" ] \
+  && read_list "$CDB_RUN_NAMES_FILE" | awk -v OFS='\t' '$1 ~ /^[0-9]+$/ { r = $1; sub(/^[0-9]+[ \t]+/, ""); print r, $0 }' > "$W/runnames.tsv"
+if [ -s "$W/runnames.tsv" ]; then
+  while IFS="$TAB" read -r t pg; do
+    [ -f "$W/csv/cdb_status_$pg.csv" ] || continue
+    awk -F'\t' -v t="$t" 'FILENAME == ARGV[1] { nm[$1] = $2; next } $1 == t && ($2 in nm) { n++; out = out $2 "," nm[$2] "\n" }
+      END { if (n) printf "run,name\n%s", out }' "$W/runnames.tsv" "$W/tagruns.tsv" > "$W/csv/cdb_runnames_$pg.csv"
+    [ -s "$W/csv/cdb_runnames_$pg.csv" ] || rm -f "$W/csv/cdb_runnames_$pg.csv"
+  done < "$W/tagpage.tsv"
+fi
 # gaps.tsv: tag type status count first last ranges
 # coverage.tsv: tag type own default nothing own% status default-runs nothing-runs
 awk -F'\t' -v OFS='\t' '
@@ -407,6 +419,23 @@ awk -F'\t' -v OFS='\t' '
     n = $3 + $4 + $5; st = ($4 + $5 > 0) ? "WARN" : "OK"
     print $1, $2, $3, $4, $5, sprintf("%.1f%%", n ? 100 * $3 / n : 0), st, rng[$1 FS $2 FS "D"], rng[$1 FS $2 FS "-"]
   }' "$W/gaps.tsv" "$W/covcount.tsv" > "$W/coverage.tsv"
+# named runs: "16-18, 21" -> "16 cosmics, 17 single particle, 18 single particle, 21 p+p ..." (runs of that tag only)
+if [ -s "$W/runnames.tsv" ]; then
+  awk -F'\t' -v OFS='\t' '
+    function named(t, txt,   n, tok, i, ab, a, b, k, r, out) {
+      n = split(txt, tok, /, /); out = ""
+      for (i = 1; i <= n; i++) {
+        if (tok[i] ~ /^[0-9]+(-[0-9]+)?$/ && split(tok[i], ab, "-") && (ab[1] in nm)) {
+          a = ab[1]; b = (ab[2] == "" ? ab[1] : ab[2])
+          for (k = 1; k <= nr[t]; k++) { r = R[t, k]; if (r + 0 >= a + 0 && r + 0 <= b + 0) out = out (out == "" ? "" : ", ") r ((r in nm) ? " " nm[r] : "") }
+        } else out = out (out == "" ? "" : ", ") tok[i]
+      }
+      return out
+    }
+    FILENAME == ARGV[1] { nm[$1] = $2; next }
+    FILENAME == ARGV[2] { nr[$1]++; R[$1, nr[$1]] = $2; next }
+    { $8 = named($1, $8); $9 = named($1, $9); print }' "$W/runnames.tsv" "$W/tagruns.tsv" "$W/coverage.tsv" > "$W/cov.tmp" && mv "$W/cov.tmp" "$W/coverage.tsv"
+fi
 awk -F'\t' '{ n = $3 + $4 + $5
     if ($4 > 0) printf "coverage\t%s %s\tWARN\tdefault only: %d of %d runs: %s\n", $1, $2, $4, n, $8
     if ($5 > 0) printf "coverage\t%s %s\tWARN\tnothing (no payload, no default): %d of %d runs: %s\n", $1, $2, $5, n, $9 }' "$W/coverage.tsv" >> "$W/results.tsv"
@@ -660,43 +689,54 @@ while read -r tag; do
     [ "$btag" = "$FLOAT" ] && h_p "<b>$btag</b> is the floating tag: its changes are reported as INFO, a file overwritten in place as WARN."
     [ "$btag" != "$FLOAT" ] && h_p "<b>$btag</b> is treated as frozen: any change since the last report is a FAIL."
     h_p "Payload list: <code>$tpl</code>. Run list: <code>$trl</code> ($tnr runs, $(head -1 "$W/runs/$(tagsafe "$tag").txt") .. $(tail -1 "$W/runs/$(tagsafe "$tag").txt"))."
+    if [ -s "$W/csv/cdb_runnames_$pn.csv" ]; then
+      tail -n +2 "$W/csv/cdb_runnames_$pn.csv" | sed 's/,/\t/' > "$P.names"
+      h_details "Run names <span class=\"mut\">($(wc -l < "$P.names" | tr -d ' ') of $tnr runs, from <code>$(basename "$CDB_RUN_NAMES_FILE")</code>)</span>"
+      h_table "$P.names" "Run|Name" 0
+      h_details_end
+    fi
 
-    h_section "Run coverage" "$s_cov"
-    h_p "Per run and payload type: <b>own</b> payload, <b>default only</b> (no run payload, so CDBInterface falls back to <code>&lt;type&gt;_default</code>) or <b>nothing</b> (neither). $ndefp of $npl payload types have default-only runs, $nnothp have runs with nothing."
-    [ "$ndrop" -gt 0 ] && h_p "Not watched in this run group: $ndrop payload types of $dropdet (limited to other run groups in <code>$(basename "${CDB_DETECTORS_FILE:-detectors.txt}")</code>)."
-    h_table "$P.covd" "Detector|Payload type|Own payload|Default only|Nothing|Own|Status|Default-only runs|Runs with nothing" 7
+    h_section "Changes since last report" "$s_diff"
+    if [ -z "$PREV" ]; then h_p "First snapshot stored; changes will be shown from the next report on."
+    else h_table "$P.diff" "Status|Payload type|Change|Old|New|Runs|Run ranges" 1 300; fi
 
-    h_section "Plots"
+    h_section "Changes in the last $DAYS days" "$([ "$nrecent" -gt 0 ] && echo INFO || echo OK)"
+    h_p "Payload files created in the last $DAYS days (file mtime; global tags carry no timestamps)."
+    h_table "$P.recent" "File date|Payload type|File|Runs|Run ranges" 0 200
+
+    h_details "Newest payload file per payload type <span class=\"mut\">($(wc -l < "$P.ages" | tr -d ' ') types)</span>"
+    h_table "$P.ages" "Payload type|Distinct files|Newest file date|Age (days)|Newest file" 0
+    h_details_end
+
+    h_section "Coverage plots" "$s_cov"
     if ls "$W/plots/cdb_plots_${pn}"*.pdf >/dev/null 2>&1; then
-      h_p "Per detector: page 1 status per run, page 2 fraction of runs per status, page 3 which payload file each run gets."
+      h_p "One set per detector: page 1 status per run, page 2 fraction of runs per status, page 3 which payload file each run gets."
       cut -f2 "$DT" | awk '!s[$0]++' | while read -r det; do
         pdf="cdb_plots_${pn}_$det.pdf"; [ -s "$W/plots/$pdf" ] || pdf="cdb_plots_$pn.pdf"
         [ -s "$W/plots/$pdf" ] || continue
         dst=$(awk -F'\t' -v d="$det" 'FILENAME == ARGV[1] { if ($2 == d) in_d[$1] = 1; next } ($1 in in_d) { print $6 }' "$DT" "$P.cov" | sort -u | tr '\n' ' ')
-        printf '<h3>%s <span class="mut">(%s types)</span> %s <a class="mut" href="@ATTACH@/%s">pdf</a></h3>\n' "$det" "$(awk -F'\t' -v d="$det" '$2 == d' "$DT" | wc -l | tr -d ' ')" "$(h_badge "$(worst_status OK $dst)")" "$pdf"
+        h_details "$det <span class=\"mut\">($(awk -F'\t' -v d="$det" '$2 == d' "$DT" | wc -l | tr -d ' ') types)</span>" "$(worst_status OK $dst)"
+        printf '<p><a href="@ATTACH@/%s">%s</a></p>\n' "$pdf" "$pdf"
         printf '<object class="pdf det" data="@ATTACH@/%s" type="application/pdf"><p><a href="@ATTACH@/%s">%s</a></p></object>\n' "$pdf" "$pdf" "$pdf"
+        h_details_end
         [ "$pdf" = "cdb_plots_$pn.pdf" ] && break
       done
     else
       h_p "Not drawn${PLOT_WHY:+ ($PLOT_WHY)}. Draw them from this report's CSVs with <code>checks/cdb/draw.sh &lt;report dir&gt;</code>."
     fi
-    h_p "Data: <a href=\"@ATTACH@/cdb_status_$pn.csv.gz\">cdb_status_$pn.csv.gz</a> (run x type: R own / D default / - nothing), <a href=\"@ATTACH@/cdb_fileid_$pn.csv.gz\">cdb_fileid_$pn.csv.gz</a> (run x type: file number), <a href=\"@ATTACH@/cdb_files_$pn.csv.gz\">cdb_files_$pn.csv.gz</a> (the numbered files), <a href=\"@ATTACH@/cdb_detectors_$pn.csv.gz\">cdb_detectors_$pn.csv.gz</a> (type -&gt; detector)."
+    h_p "Data: <a href=\"@ATTACH@/cdb_status_$pn.csv.gz\">cdb_status_$pn.csv.gz</a> (run x type: R own / D default / - nothing), <a href=\"@ATTACH@/cdb_fileid_$pn.csv.gz\">cdb_fileid_$pn.csv.gz</a> (run x type: file number), <a href=\"@ATTACH@/cdb_files_$pn.csv.gz\">cdb_files_$pn.csv.gz</a> (the numbered files), <a href=\"@ATTACH@/cdb_detectors_$pn.csv.gz\">cdb_detectors_$pn.csv.gz</a> (type -&gt; detector)$([ -s "$W/csv/cdb_runnames_$pn.csv" ] && printf ', <a href="@ATTACH@/cdb_runnames_%s.csv.gz">cdb_runnames_%s.csv.gz</a> (run names)' "$pn" "$pn")."
+
+    h_details "Coverage table <span class=\"mut\">($npl payload types: $ndefp with default-only runs, $nnothp with runs that have nothing)</span>" "$s_cov"
+    h_p "Per run and payload type: <b>own</b> payload, <b>default only</b> (no run payload, so CDBInterface falls back to <code>&lt;type&gt;_default</code>) or <b>nothing</b> (neither)."
+    [ "$ndrop" -gt 0 ] && h_p "Not watched in this run group: $ndrop payload types of $dropdet (limited to other run groups in <code>$(basename "${CDB_DETECTORS_FILE:-detectors.txt}")</code>)."
+    h_table "$P.covd" "Detector|Payload type|Own payload|Default only|Nothing|Own|Status|Default-only runs|Runs with nothing" 7
+    h_details_end
 
     h_section "Payload files" "$s_files"
     h_p "Problem files (missing, empty, unreadable by ROOT):"
     h_table "$P.bad" "Status|File|Payload types|Tags|Runs|Problem" 1 200
     h_p "Files shared by several payload types:"
     h_table "$P.shared" "Status|File|Payload types|Tags|Runs" 1 100
-
-    h_section "Updates in the last $DAYS days" "$([ "$nrecent" -gt 0 ] && echo INFO || echo OK)"
-    h_p "Payload files created in the last $DAYS days (file mtime; global tags carry no timestamps)."
-    h_table "$P.recent" "File date|Payload type|File|Runs|Run ranges" 0 200
-    h_p "Newest payload file per payload type:"
-    h_table "$P.ages" "Payload type|Distinct files|Newest file date|Age (days)|Newest file" 0
-
-    h_section "Changes since last report" "$s_diff"
-    if [ -z "$PREV" ]; then h_p "First snapshot stored; changes will be shown from the next report on."
-    else h_table "$P.diff" "Status|Payload type|Change|Old|New|Runs|Run ranges" 1 300; fi
 
     if [ -s "$P.cmp" ]; then
       h_section "Tag comparison" INFO

@@ -12,7 +12,7 @@
 #   --keep-work  keep the scratch directory (printed at the end)
 #   -v, --verbose  stream the check's log and ROOT output to the terminal
 #   any other --option VALUE is passed to the check, e.g. for cdb:
-#     ./shirt.sh run cdb --test --tag ProdA_2024 --payload CEMC_calib [--runs runs.txt]
+#     ./shirt.sh run cdb --test --tag newcdbtag --payload CEMC_calib [--runs runs.txt]
 #
 # A check is a directory checks/<name>/ with an executable check.sh. It runs with
 # SHIRT_HOME SHIRT_CONF SHIRT_WORK SHIRT_STATE SHIRT_STAMP exported and must write
