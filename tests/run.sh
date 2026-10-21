@@ -174,6 +174,12 @@ EOF
   expect "run3pp is clean"                               not_has "$(latest dst)/results.tsv" 'run3pp.*(FAIL|WARN)'
   expect "group pages"                                   test -s "$OUT/www/dst/pages/grp_run3auau.html" -a -s "$OUT/www/dst/pages/grp_run3oo.html"
   expect "good-run list is downloadable"                 cmp -s "$(latest dst)/goodruns_run3pp.txt" "$R/run3pp.goodruns.txt"
+  expect "per-run csv: segments found/expected/on disk"  sh -c "gzip -dc '$(latest dst)/dst_runs_run3auau.csv.gz' | grep -qx '60310,CALOFITTING,INFO,10,10,0,0'"
+  expect "  ... a missing DST is all zero"               sh -c "gzip -dc '$(latest dst)/dst_runs_run3auau.csv.gz' | grep -qx '60330,CALOFITTING,FAIL,0,0,0,0'"
+  if command -v root >/dev/null 2>&1; then
+    expect "one plot per DST, embedded"                  has "$OUT/www/dst/pages/grp_run3auau.html" '<object class="pdf det" data="[^"]*dst_plots_run3auau_CALOFITTING.pdf"'
+    expect "  ... drawn"                                 test -s "$(latest dst)/dst_plots_run3auau_RAW_SEB.pdf"
+  fi
   expect "page shows the criteria"                       has "$OUT/www/dst/pages/grp_run3pp.html" 'at least 100000 events'
 
   # second report: one CALOFITTING DST is gone

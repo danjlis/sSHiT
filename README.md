@@ -152,6 +152,11 @@ Two steps. The data taking is finished, so step 1 is normally done once:
    - a DST that disappeared or lost segments → FAIL
    - a new production tag or a changed good-run list → INFO
 
+   Plots, one per run group and DST (like the cdb plots, drawn from a CSV): first segment on disk per run
+   (green/red), percent of the expected segments on disk vs run number (one marker per run), and runs per percent of the expected segments on disk (all green, ≥95% yellow, <95% black).
+   The check writes `dst_runs_<group>.csv` (run, DST, status, segments found / expected / on disk, 1st segment
+   on disk); `checks/dst/draw.sh <report dir>` redraws from it. `DST_PLOTS=0` = CSVs only.
+
 ```bash
 checks/dst/discover.sh                    # read-only schema dump -> config/dst_schema.txt
 checks/dst/make_runlists.sh -v            # good-run lists (or: condor_submit ARGS="checks/dst/make_runlists.sh -v" condor/shirt.sub)

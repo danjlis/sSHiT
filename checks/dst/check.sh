@@ -10,6 +10,8 @@
 #             (production_setup via production_status; else read from the tag name)
 #  diff       per group, against that group's previous snapshot: DSTs that disappeared or lost
 #             segments -> FAIL; appeared, no longer on disk, new production tag, runs (de)selected -> INFO
+#  plots      per group and DST: first segment on disk per run, percent of segments on disk vs run
+#             number, runs per percent of segments on disk; drawn by checks/dst/draw.sh from dst_runs_<group>.csv (needs ROOT, DST_PLOTS=0 = off)
 #
 # options (passed through by shirt.sh, repeatable except --runs):
 #   --group G      check only this run group
@@ -203,8 +205,9 @@ cut -f4,5 "$W/best.tsv" | sort -u | awk -F'\t' -v OFS='\t' '
       else { split(t, f, "_"); print t, (f[2] == "" ? "-" : f[2]), f[1], "tag name" } } }' "$W/setups.tsv" - | sort > "$W/tagmap.tsv"
 vlog "production tags: $(cut -f1 "$W/tagmap.tsv" | tr '\n' ' ')"
 
-# cells.tsv: group run name status text missing gap lowev hpss multi nseg disk seg0 tags
+# cells.tsv: group run name status text missing gap lowev hpss multi nseg disk seg0 tags expected
 #   seg0: first segment on disk for every matched dsttype; tags: production tag(s) used ("+"-joined)
+#   expected: segments expected (max segment + 1, summed over the dsttypes; scaled up when dsttypes are missing)
 # MIN_TYPES "hosts": one dsttype ending in each DST_CALO_HOSTS name (others ignored), missing ones named
 awk -F'\t' -v OFS='\t' -v frac="${DST_MIN_EVENT_FRAC:-0}" -v hosts="$DST_CALO_HOSTS" '
   function host_of(d,   i) { for (i = 1; i <= nh; i++) if (length(d) >= length(H[i]) && substr(d, length(d) - length(H[i]) + 1) == H[i]) return H[i]; return "" }
@@ -240,7 +243,9 @@ awk -F'\t' -v OFS='\t' -v frac="${DST_MIN_EVENT_FRAC:-0}" -v hosts="$DST_CALO_HO
           if (mtag[k] > 1) { mul = 1; txt = txt ", " mtag[k] " tags"; if (st == "OK") st = "INFO" }
           if (!first && st == "OK") st = "INFO"
         }
-        print runs[r], name, st, txt, mis, gap, low, hps, mul, seg[k] + 0, dsk[k] + 0, first, ((k in tg) ? tg[k] : "-")
+        want = (mt[g, name] == "hosts") ? nh : mt[g, name]
+        xp = !(k in ty) ? 0 : (ty[k] < want) ? int(ex[k] * want / ty[k] + 0.5) : ex[k]
+        print runs[r], name, st, txt, mis, gap, low, hps, mul, seg[k] + 0, dsk[k] + 0, first, ((k in tg) ? tg[k] : "-"), xp
       }
     }
   }' "$W/types.tsv" "$W/good.tsv" "$W/best.tsv" > "$W/cells.tsv"
@@ -311,6 +316,24 @@ done < "$W/groups.txt"
 awk -F'\t' '{ printf "diff\t%s %s\t%s\t%s: %d runs (%s) since %s\n", $2, $3, $1, $4, $5, $6, $7 }' "$W/diff.tsv" >> "$W/results.tsv"
 NDIFF=$(awk -F'\t' '{ s += $5 } END { print s + 0 }' "$W/diff.tsv")
 
+# ------------------------------------------------------------------ plots (from CSVs: checks/dst/draw.sh)
+# dst_runs_<group>.csv: run,dst,status,segments,expected,on_disk,first_on_disk   (every good run x expected DST)
+mkdir -p "$W/csv" "$W/plots"
+while read -r g; do
+  { echo "run,dst,status,segments,expected,on_disk,first_on_disk"
+    awk -F'\t' -v OFS=',' -v g="$g" '$1 == g { print $2, $3, $4, $11, $15, $12, $13 }' "$W/cells.tsv"; } > "$W/csv/dst_runs_$(gsafe "$g").csv"
+done < "$W/groups.txt"
+PLOT_WHY=
+if [ "${DST_PLOTS:-1}" != 1 ]; then PLOT_WHY="DST_PLOTS=0"
+elif ! command -v root >/dev/null 2>&1; then PLOT_WHY="ROOT not available"; fi
+if [ -z "$PLOT_WHY" ]; then
+  log "plots: drawing $(wc -l < "$W/groups.txt" | tr -d ' ') run groups"
+  "$SHIRT_HOME/checks/dst/draw.sh" -o "$W/plots" "$W/csv"/dst_runs_*.csv >> "$W/root.log" 2>&1 \
+    || result plots draw.sh WARN "drawing failed for some plots (see root.log)"
+else vlog "plots: not drawn ($PLOT_WHY)"; fi
+for f in "$W/csv"/*.csv; do [ -f "$f" ] && gzip -c "$f" > "$A/$(basename "$f").gz"; done
+for f in "$W/plots"/*.pdf; do [ -f "$f" ] && cp "$f" "$A/"; done
+
 # ------------------------------------------------------------------ pages + cards
 mkdir -p "$W/pages" "$SHIRT_STATE/cards"
 hdr() {  # hdr <group> <key>: value of "# key: ..." in the group's good-run list header (html-escaped)
@@ -367,8 +390,22 @@ while read -r g; do
     h_table "$P.flags" "DST|Problem|Runs|Run ranges" 0 300
 
     h_section "Runs with problems"
+    h_p "Per expected DST, over all $ngood good runs: is the first segment on disk (green) or not (red, also when the DST is missing); the percent of the expected segments on disk per run number, and as a histogram over the runs: all <span style=\"color:#009900\">green</span>, at least 95% <span style=\"color:#b38f00\">yellow</span>, below 95% black (a missing DST counts as 0)."
+    for n in $names; do
+      pdf="dst_plots_${gs}_$n.pdf"
+      if [ -s "$W/plots/$pdf" ]; then
+        bad=$(awk -F'\t' -v g="$g" -v n="$n" '$1 == g && $3 == n && (!$13 || ($15 == 0 || $12 < $15)) { c++ } END { print c + 0 }' "$W/cells.tsv")
+        h_details "$n <span class=\"mut\">($bad runs not fully on disk or 1st segment missing)</span>" "$(awk -F'\t' -v n="$n" '$1 == n { print $12 }' "$P.stats")"
+        printf '<object class="pdf det" data="@ATTACH@/%s" type="application/pdf"><p><a href="@ATTACH@/%s">%s</a></p></object>\n' "$pdf" "$pdf" "$pdf"
+        h_details_end
+      fi
+    done
+    [ -n "$PLOT_WHY" ] && h_p "Plots not drawn ($PLOT_WHY). Draw them from this report's CSVs with <code>checks/dst/draw.sh &lt;report dir&gt;</code>."
+    h_p "Data: <a href=\"@ATTACH@/dst_runs_$gs.csv.gz\">dst_runs_$gs.csv.gz</a> (run, DST, status, segments found / expected / on disk, 1st segment on disk)."
+    h_details "Table of the runs with problems <span class=\"mut\">($(wc -l < "$P.mx" | tr -d ' ') runs)</span>"
     h_p "Every good run with a missing or incomplete DST, not on disk, first segment not transferred, or with several production tags (cells: segments found[/expected], where the files are; 1st: first segment on disk &#10003; / &#10007;)."
     h_table "$P.mx" "Status|Run|Events|$(for n in $names; do printf '%s|1st|' "$n"; done | sed 's/|$//')" 1 500
+    h_details_end
 
     h_section "Changes since last report" "$(worst_status OK $(cut -f1 "$P.diff"))"
     if [ -n "$OPT_RUNS" ]; then h_p "Not compared: --runs run."
