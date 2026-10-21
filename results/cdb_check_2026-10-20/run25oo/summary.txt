@@ -1,9 +1,13 @@
-CDB availability for 134 runs (82388-82703), 25 domains
+CDB availability for 134 runs (82388-82703), 31 domains
 R = run payload, P = placeholder (run payload file entered under >= 3 separate IOVs to fill gaps),
 D = default only (CDBInterface falls back to it), - = nothing
 ranges are consecutive runs of the run list (count in parentheses)
 
 CEMC_BadTowerMap: R 134, P 0, D 0, - 0, 134 distinct payload(s)
+CEMC_ZSCrossCalib: R 134, P 0, D 0, - 0, 134 distinct payload(s)
+CEMC_ZSCrossCalibT0: R 0, P 0, D 0, - 134, 1 distinct payload(s)
+  nothing:      82388-82703 (134)
+    134 runs: NONE
 CEMC_calib_ADC_to_ETower: R 134, P 0, D 0, - 0, 1 distinct payload(s)
     134 runs: c51e909496331c0eb5eaaeb60cd5286d_CEMC_ADC_To_ETower_OO_initial_v1.root
 CEMC_hotTowers_fracBadChi2: R 134, P 0, D 0, - 0, 134 distinct payload(s)
@@ -15,10 +19,18 @@ CentralityScale: R 133, P 0, D 1, - 0, 134 distinct payload(s)
 CentralityVertexScale: R 133, P 0, D 1, - 0, 134 distinct payload(s)
   default only: 82522
 HCALIN_BadTowerMap: R 134, P 0, D 0, - 0, 134 distinct payload(s)
+HCALIN_ZSCrossCalib: R 134, P 0, D 0, - 0, 134 distinct payload(s)
+HCALIN_ZSCrossCalibT0: R 0, P 0, D 0, - 134, 1 distinct payload(s)
+  nothing:      82388-82703 (134)
+    134 runs: NONE
 HCALIN_calib_ADC_to_ETower: R 134, P 0, D 0, - 0, 133 distinct payload(s)
 HCALIN_hotTowers_fracBadChi2: R 134, P 0, D 0, - 0, 134 distinct payload(s)
 HCALIN_meanTime: R 134, P 0, D 0, - 0, 134 distinct payload(s)
 HCALOUT_BadTowerMap: R 134, P 0, D 0, - 0, 134 distinct payload(s)
+HCALOUT_ZSCrossCalib: R 134, P 0, D 0, - 0, 134 distinct payload(s)
+HCALOUT_ZSCrossCalibT0: R 0, P 0, D 0, - 134, 1 distinct payload(s)
+  nothing:      82388-82703 (134)
+    134 runs: NONE
 HCALOUT_calib_ADC_to_ETower: R 134, P 0, D 0, - 0, 133 distinct payload(s)
 HCALOUT_hotTowers_fracBadChi2: R 134, P 0, D 0, - 0, 134 distinct payload(s)
 HCALOUT_meanTime: R 134, P 0, D 0, - 0, 134 distinct payload(s)

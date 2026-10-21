@@ -1,10 +1,15 @@
-CDB availability for 852 runs (79151-81668), 25 domains
+CDB availability for 852 runs (79151-81668), 31 domains
 R = run payload, P = placeholder (run payload file entered under >= 3 separate IOVs to fill gaps),
 D = default only (CDBInterface falls back to it), - = nothing
 ranges are consecutive runs of the run list (count in parentheses)
 
 CEMC_BadTowerMap: R 809, P 0, D 43, - 0, 810 distinct payload(s)
   default only: 79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
+CEMC_ZSCrossCalib: R 809, P 0, D 0, - 43, 810 distinct payload(s)
+  nothing:      79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
+CEMC_ZSCrossCalibT0: R 0, P 0, D 0, - 852, 1 distinct payload(s)
+  nothing:      79151-81668 (852)
+    852 runs: NONE
 CEMC_calib_ADC_to_ETower: R 852, P 0, D 0, - 0, 1 distinct payload(s)
     852 runs: 77e7be3e9a85d44598aae5c5c044c582_EMCAL_ADC_to_Etower-new_newcdbtag_v008-78218.root
 CEMC_hotTowers_fracBadChi2: R 809, P 0, D 43, - 0, 810 distinct payload(s)
@@ -23,6 +28,11 @@ CentralityVertexScale: R 0, P 0, D 852, - 0, 1 distinct payload(s)
 HCALIN_BadTowerMap: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:6c13ddeed34daa2e9445b0fd9e054bf4_HCALIN_HotMap_default.root
+HCALIN_ZSCrossCalib: R 809, P 0, D 0, - 43, 810 distinct payload(s)
+  nothing:      79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
+HCALIN_ZSCrossCalibT0: R 0, P 0, D 0, - 852, 1 distinct payload(s)
+  nothing:      79151-81668 (852)
+    852 runs: NONE
 HCALIN_calib_ADC_to_ETower: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:182b0c488f11ffe7bfadb644137ab020_ihcal_cdb_tsc_cos_calib_77106.root
@@ -33,6 +43,11 @@ HCALIN_meanTime: R 809, P 0, D 43, - 0, 810 distinct payload(s)
 HCALOUT_BadTowerMap: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:e832fdbec055fc0024786ab8d705012b_HCALOUT_HotMap_default.root
+HCALOUT_ZSCrossCalib: R 809, P 0, D 0, - 43, 810 distinct payload(s)
+  nothing:      79211, 79243-79257 (2), 79283, 79345-79363 (2), 79439, 79442, 79482, 79629-79630 (2), 79820, 79919, 79934, 80150, 80158, 80226, 80258, 80268, 80597-80616 (10), 80784, 80865, 80922, 81075-81082 (7), 81308, 81618, 81667-81668 (2)
+HCALOUT_ZSCrossCalibT0: R 0, P 0, D 0, - 852, 1 distinct payload(s)
+  nothing:      79151-81668 (852)
+    852 runs: NONE
 HCALOUT_calib_ADC_to_ETower: R 0, P 0, D 852, - 0, 1 distinct payload(s)
   default only: 79151-81668 (852)
     852 runs: default:929235c1ae16d0b802d594a1acf11aa7_ohcal_cdb_tsc_cos_calib_77106.root

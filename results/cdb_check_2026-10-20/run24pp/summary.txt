@@ -1,9 +1,13 @@
-CDB availability for 1568 runs (47289-53864), 25 domains
+CDB availability for 1568 runs (47289-53864), 31 domains
 R = run payload, P = placeholder (run payload file entered under >= 3 separate IOVs to fill gaps),
 D = default only (CDBInterface falls back to it), - = nothing
 ranges are consecutive runs of the run list (count in parentheses)
 
 CEMC_BadTowerMap: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+CEMC_ZSCrossCalib: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+CEMC_ZSCrossCalibT0: R 0, P 0, D 0, - 1568, 1 distinct payload(s)
+  nothing:      47289-53864 (1568)
+    1568 runs: NONE
 CEMC_calib_ADC_to_ETower: R 1568, P 0, D 0, - 0, 1 distinct payload(s)
     1568 runs: 9db3df70aa7b575b5e2417904e551efa_emcal_calib_pp_47289_53864_v2.root
 CEMC_hotTowers_fracBadChi2: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
@@ -19,6 +23,10 @@ CentralityVertexScale: R 0, P 0, D 0, - 1568, 1 distinct payload(s)
 HCALIN_BadTowerMap: R 0, P 0, D 1568, - 0, 1 distinct payload(s)
   default only: 47289-53864 (1568)
     1568 runs: default:6c13ddeed34daa2e9445b0fd9e054bf4_HCALIN_HotMap_default.root
+HCALIN_ZSCrossCalib: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+HCALIN_ZSCrossCalibT0: R 0, P 0, D 0, - 1568, 1 distinct payload(s)
+  nothing:      47289-53864 (1568)
+    1568 runs: NONE
 HCALIN_calib_ADC_to_ETower: R 1562, P 0, D 6, - 0, 1563 distinct payload(s)
   default only: 52097-52104 (6)
 HCALIN_hotTowers_fracBadChi2: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
@@ -26,6 +34,10 @@ HCALIN_meanTime: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
 HCALOUT_BadTowerMap: R 0, P 0, D 1568, - 0, 1 distinct payload(s)
   default only: 47289-53864 (1568)
     1568 runs: default:e832fdbec055fc0024786ab8d705012b_HCALOUT_HotMap_default.root
+HCALOUT_ZSCrossCalib: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)
+HCALOUT_ZSCrossCalibT0: R 0, P 0, D 0, - 1568, 1 distinct payload(s)
+  nothing:      47289-53864 (1568)
+    1568 runs: NONE
 HCALOUT_calib_ADC_to_ETower: R 1564, P 0, D 4, - 0, 1310 distinct payload(s)
   default only: 52099-52101 (2), 52103-52104 (2)
 HCALOUT_hotTowers_fracBadChi2: R 1568, P 0, D 0, - 0, 1568 distinct payload(s)

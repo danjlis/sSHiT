@@ -1,7 +1,8 @@
 # CDB payload availability per running period (2026-10-20)
 
-For every run of each period's run list and every payload type below, the CDB was asked for the run's payload
-and for `<payload>_default`. Each run is then one of:
+For every run of each period's run list and each of 31 calorimeter, MBD, ZDC, sEPD and centrality payload types
+(the rows of the table, including the EMCal/IHCal/OHCal `ZSCrossCalib` and `ZSCrossCalibT0`), the CDB was asked
+for the run's payload and for `<payload>_default`. Each run is then one of:
 
 - **run payload**: the run has its own payload (it may still be one file shared by a whole run range);
 - **placeholder**: the run payload is a gap filler, i.e. one file entered under at least 3 separate IOVs of that
@@ -40,13 +41,18 @@ run25auau 2756 of 2771 (run3auau 3141), run25oo 134 of 134 (run3oo 135), run25pp
 The per-run payload file names (`cdb_payloads.csv`, 9 MB in total) are not included; they are on RCF in
 `/sphenix/user/samfred/projects/cdb_check/periods/<period>/`, together with the scripts that made all of this
 (`CheckRuns.C`, `Draw_CDBCheck.C`, `make_table.py`; the payload list is `../cdbtools/checkCDB.C`).
-`CheckRuns.C` queries `CDBUtils::PayloadIOVs(run)` like `checks/cdb/macros/CdbScan.C`; running `CdbScan.C` on
-every run of the five lists gives the same payload for all 269,800 (run, payload type) lookups.
+`CheckRuns.C` queries `CDBUtils::PayloadIOVs(run)` like `checks/cdb/macros/CdbScan.C`. Before the ZS types were
+added, running `CdbScan.C` on every run of the five lists gave the same payload for all 269,800 (run, payload
+type) lookups of the other 25 types.
 
 ## Main findings
 
 - `MBD_QFIT` in Run 24 p+p: 496 of 1568 runs get the placeholder `mbd_qfit_40507.root` instead of a run calibration,
   461 of them from 52309 to the end of the period (also 50661-50887, 51200-51493 and single runs).
+- ZS cross-calibration: `ZSCrossCalibT0` (EMCal, IHCal and OHCal alike) has no payload in any run of Run 24 p+p,
+  Run 24 Au+Au, Run 25 O+O and Run 25 p+p, nor in 13 Run 25 Au+Au runs (69145-69203); there is no default.
+  `ZSCrossCalib` is missing in 31 of 71 Run 24 Au+Au and 43 of 852 Run 25 p+p runs (the same 43 runs that have
+  only the default CEMC/HCal hot-tower and mean-time maps); its `_default` type exists in the CDB but not in the tag.
 - `MBD_T0CORR` has no payload and no default for every Run 25 p+p and O+O run, and for 198 Run 24 p+p
   (48900-49652, 52844), 6 Run 24 Au+Au and 310 Run 25 Au+Au runs.
 - Run 25 p+p: `MBD_QFIT`, the HCal calibrations and bad-tower maps and the three centrality payloads are default only

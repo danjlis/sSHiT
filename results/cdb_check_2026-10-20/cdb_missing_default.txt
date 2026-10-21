@@ -10,6 +10,8 @@ CDB payloads per running period: runs with no run payload
 domain                        |      Run24 p+p (1568) |      Run24 Au+Au (71) |    Run25 Au+Au (2771) |       Run25 O+O (134) |       Run25 p+p (852)
 -----------------------------------------------------------------------------------------------------------------------------------------------------
 CEMC_BadTowerMap              |                    ok |            10 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
+CEMC_ZSCrossCalib             |                    ok |            0 / 0 / 31 |                    ok |                    ok |            0 / 0 / 43
+CEMC_ZSCrossCalibT0           |          0 / 0 / 1568 |            0 / 0 / 71 |            0 / 0 / 13 |           0 / 0 / 134 |           0 / 0 / 852
 CEMC_calib_ADC_to_ETower      |                    ok |                    ok |                    ok |                    ok |                    ok
 CEMC_hotTowers_fracBadChi2    |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
 CEMC_meanTime                 |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
@@ -17,10 +19,14 @@ Centrality                    |                    ok |                    ok | 
 CentralityScale               |          0 / 0 / 1568 |             0 / 0 / 2 |                    ok |             1 / 0 / 0 |           852 / 0 / 0
 CentralityVertexScale         |          0 / 0 / 1568 |             0 / 0 / 2 |                    ok |             1 / 0 / 0 |           852 / 0 / 0
 HCALIN_BadTowerMap            |          1568 / 0 / 0 |            71 / 0 / 0 |                    ok |                    ok |           852 / 0 / 0
+HCALIN_ZSCrossCalib           |                    ok |            0 / 0 / 31 |                    ok |                    ok |            0 / 0 / 43
+HCALIN_ZSCrossCalibT0         |          0 / 0 / 1568 |            0 / 0 / 71 |            0 / 0 / 13 |           0 / 0 / 134 |           0 / 0 / 852
 HCALIN_calib_ADC_to_ETower    |             6 / 0 / 0 |                    ok |          2771 / 0 / 0 |                    ok |           852 / 0 / 0
 HCALIN_hotTowers_fracBadChi2  |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
 HCALIN_meanTime               |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
 HCALOUT_BadTowerMap           |          1568 / 0 / 0 |            71 / 0 / 0 |                    ok |                    ok |           852 / 0 / 0
+HCALOUT_ZSCrossCalib          |                    ok |            0 / 0 / 31 |                    ok |                    ok |            0 / 0 / 43
+HCALOUT_ZSCrossCalibT0        |          0 / 0 / 1568 |            0 / 0 / 71 |            0 / 0 / 13 |           0 / 0 / 134 |           0 / 0 / 852
 HCALOUT_calib_ADC_to_ETower   |             4 / 0 / 0 |                    ok |          2771 / 0 / 0 |                    ok |           852 / 0 / 0
 HCALOUT_hotTowers_fracBadChi2 |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0
 HCALOUT_meanTime              |                    ok |            14 / 0 / 0 |                    ok |                    ok |            43 / 0 / 0

@@ -1,9 +1,12 @@
-CDB availability for 2771 runs (67597-78954), 25 domains
+CDB availability for 2771 runs (67597-78954), 31 domains
 R = run payload, P = placeholder (run payload file entered under >= 3 separate IOVs to fill gaps),
 D = default only (CDBInterface falls back to it), - = nothing
 ranges are consecutive runs of the run list (count in parentheses)
 
 CEMC_BadTowerMap: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
+CEMC_ZSCrossCalib: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
+CEMC_ZSCrossCalibT0: R 2758, P 0, D 0, - 13, 2759 distinct payload(s)
+  nothing:      69145-69203 (13)
 CEMC_calib_ADC_to_ETower: R 2771, P 0, D 0, - 0, 3 distinct payload(s)
     295 runs: 2c45331bdf8576df2d7101e7ae3c980c_EMCAL_ADC_to_Etower-new_newcdbtag_v008-78218v3.root
     1269 runs: 643fd642adaff53b215e94c7daf6e1e6_EMCAL_ADC_to_Etower-new_newcdbtag_v008-73839v3.root
@@ -14,12 +17,18 @@ Centrality: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
 CentralityScale: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
 CentralityVertexScale: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
 HCALIN_BadTowerMap: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
+HCALIN_ZSCrossCalib: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
+HCALIN_ZSCrossCalibT0: R 2758, P 0, D 0, - 13, 2759 distinct payload(s)
+  nothing:      69145-69203 (13)
 HCALIN_calib_ADC_to_ETower: R 0, P 0, D 2771, - 0, 1 distinct payload(s)
   default only: 67597-78954 (2771)
     2771 runs: default:a3ed4507cb763becb9eb4d9ce22c0ebe_HCALIN_ADC_to_Etower_2025_v1.root
 HCALIN_hotTowers_fracBadChi2: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
 HCALIN_meanTime: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
 HCALOUT_BadTowerMap: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
+HCALOUT_ZSCrossCalib: R 2771, P 0, D 0, - 0, 2771 distinct payload(s)
+HCALOUT_ZSCrossCalibT0: R 2758, P 0, D 0, - 13, 2759 distinct payload(s)
+  nothing:      69145-69203 (13)
 HCALOUT_calib_ADC_to_ETower: R 0, P 0, D 2771, - 0, 1 distinct payload(s)
   default only: 67597-78954 (2771)
     2771 runs: default:2a244befb9b26c682b253fb4dbac98b7_HCALOUT_ADC_to_Etower_2025_v1.root

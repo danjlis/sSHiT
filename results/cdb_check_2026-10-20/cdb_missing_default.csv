@@ -1,5 +1,7 @@
 domain,run24pp_nruns,run24pp_default,run24pp_placeholder,run24pp_missing,run24auau_nruns,run24auau_default,run24auau_placeholder,run24auau_missing,run25auau_nruns,run25auau_default,run25auau_placeholder,run25auau_missing,run25oo_nruns,run25oo_default,run25oo_placeholder,run25oo_missing,run25pp_nruns,run25pp_default,run25pp_placeholder,run25pp_missing
 CEMC_BadTowerMap,1568,0,0,0,71,10,0,0,2771,0,0,0,134,0,0,0,852,43,0,0
+CEMC_ZSCrossCalib,1568,0,0,0,71,0,0,31,2771,0,0,0,134,0,0,0,852,0,0,43
+CEMC_ZSCrossCalibT0,1568,0,0,1568,71,0,0,71,2771,0,0,13,134,0,0,134,852,0,0,852
 CEMC_calib_ADC_to_ETower,1568,0,0,0,71,0,0,0,2771,0,0,0,134,0,0,0,852,0,0,0
 CEMC_hotTowers_fracBadChi2,1568,0,0,0,71,14,0,0,2771,0,0,0,134,0,0,0,852,43,0,0
 CEMC_meanTime,1568,0,0,0,71,14,0,0,2771,0,0,0,134,0,0,0,852,43,0,0
@@ -7,10 +9,14 @@ Centrality,1568,0,0,0,71,0,0,0,2771,0,0,0,134,1,0,0,852,852,0,0
 CentralityScale,1568,0,0,1568,71,0,0,2,2771,0,0,0,134,1,0,0,852,852,0,0
 CentralityVertexScale,1568,0,0,1568,71,0,0,2,2771,0,0,0,134,1,0,0,852,852,0,0
 HCALIN_BadTowerMap,1568,1568,0,0,71,71,0,0,2771,0,0,0,134,0,0,0,852,852,0,0
+HCALIN_ZSCrossCalib,1568,0,0,0,71,0,0,31,2771,0,0,0,134,0,0,0,852,0,0,43
+HCALIN_ZSCrossCalibT0,1568,0,0,1568,71,0,0,71,2771,0,0,13,134,0,0,134,852,0,0,852
 HCALIN_calib_ADC_to_ETower,1568,6,0,0,71,0,0,0,2771,2771,0,0,134,0,0,0,852,852,0,0
 HCALIN_hotTowers_fracBadChi2,1568,0,0,0,71,14,0,0,2771,0,0,0,134,0,0,0,852,43,0,0
 HCALIN_meanTime,1568,0,0,0,71,14,0,0,2771,0,0,0,134,0,0,0,852,43,0,0
 HCALOUT_BadTowerMap,1568,1568,0,0,71,71,0,0,2771,0,0,0,134,0,0,0,852,852,0,0
+HCALOUT_ZSCrossCalib,1568,0,0,0,71,0,0,31,2771,0,0,0,134,0,0,0,852,0,0,43
+HCALOUT_ZSCrossCalibT0,1568,0,0,1568,71,0,0,71,2771,0,0,13,134,0,0,134,852,0,0,852
 HCALOUT_calib_ADC_to_ETower,1568,4,0,0,71,0,0,0,2771,2771,0,0,134,0,0,0,852,852,0,0
 HCALOUT_hotTowers_fracBadChi2,1568,0,0,0,71,14,0,0,2771,0,0,0,134,0,0,0,852,43,0,0
 HCALOUT_meanTime,1568,0,0,0,71,14,0,0,2771,0,0,0,134,0,0,0,852,43,0,0
