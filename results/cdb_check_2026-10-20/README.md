@@ -11,8 +11,8 @@ and for `<payload>_default`. Each run is then one of:
 - **default**: no run payload, so `CDBInterface` falls back to `<payload>_default`;
 - **missing**: neither exists, so the reconstruction runs without that calibration.
 
-Global tag `newcdbtag` (`ProdA_2024` returns the same payloads; the two Run 24 periods were looked up with
-`ProdA_2024`, and a check on runs of all five periods gave identical answers). sPHENIX build ana.579.
+Global tag `newcdbtag` for every period (`ProdA_2024` returns the same payloads, checked on runs of all five
+periods). sPHENIX build ana.579.
 
 | period | runs | run list |
 |---|---|---|
@@ -47,7 +47,6 @@ every run of the five lists gives the same payload for all 269,800 (run, payload
 
 - `MBD_QFIT` in Run 24 p+p: 496 of 1568 runs get the placeholder `mbd_qfit_40507.root` instead of a run calibration,
   461 of them from 52309 to the end of the period (also 50661-50887, 51200-51493 and single runs).
-
 - `MBD_T0CORR` has no payload and no default for every Run 25 p+p and O+O run, and for 198 Run 24 p+p
   (48900-49652, 52844), 6 Run 24 Au+Au and 310 Run 25 Au+Au runs.
 - Run 25 p+p: `MBD_QFIT`, the HCal calibrations and bad-tower maps and the three centrality payloads are default only
