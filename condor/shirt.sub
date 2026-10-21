@@ -5,7 +5,7 @@
 #   condor_submit ARGS="checks/dst/make_runlists.sh -v" condor/shirt.sub   # good-run lists for dst
 # Jobs of the same check wait for each other (lock in the state dir), so several can be queued at once.
 # stdout/stderr -> condor/logs/; the condor log is on local /tmp.
-ARGS            = run dst --test -v
+# ARGS            = run dst --test -v
 universe        = vanilla
 executable      = condor/shirt_job.sh
 arguments       = $(ARGS)
